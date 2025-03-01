@@ -1,80 +1,79 @@
 # Django To-Do List App 📝
-
-このプロジェクトは Django を使用したシンプルな To-Do リストアプリです。  
-ユーザーはタスクを追加、編集、削除、完了マークすることができます。
+このプロジェクトは Django を使用したシンプルな タスク管理表です。
+全体としてのタスク、個人としてのタスクがそれぞれ別で見ることができ個人の人月がそれぞれ見ることができます。
+優先タスクや期限に近いタスクにはアラート等の制御を実施予定
 
 ## 🚀 機能
-- タスクの追加 ✍️
-- タスクの編集 ✏️
-- タスクの削除 🗑️
-- タスクの完了マーク ✅
-- データベースに保存 🗄️
-- Django Admin でタスク管理 📊
+- 新規ブランチのマージ  🎉
+- 根幹機能の改修 ✨
+- タスク削除  🗑️
+- タスクの詳細改修  🛠️
+- 文章修正  📚
 
-- コミットするときは✍️ (編集内容）みたいな感じでいこう
+- コミットするときは「 📚 編集内容 #2 」みたいな感じでいこう
 
-## 🛠️ 使用技術
+## バージョン管理
+- 基本的にmasterには検証を終えてからマージすること
+- 追加機能を搭載する前にブランチを切ってdevelopにマージすること
+- 命名規則としては、"issue番号-追加機能名"
+
+#### 🛠️ 使用技術
 - Python 3.x
 - Django 4.x
 - SQLite3（デフォルトのDB）
 - HTML, CSS (Bootstrap)
 - JavaScript (オプション)
+#### 🛠️ 使用技術
+- github
+- visual studio code 
+- ターミナル(teraturm / RLogin)がおすすめ powershellはあんまし使いたくない
 
-## 📦 インストール方法
+## 📦 一連の流れ
 
 1. **リポジトリをクローン**
+    cloneしたいディレクトリに移動後、以下のコマンドをgit_bashで叩く
     ```sh
     git clone https://github.com/your-username/todolist.git
-    cd todolist
     ```
-2. **仮想環境を作成 & 有効化**
+2. **git_bashでlogin実施**
+    確か以下のコードだったような気がする ※調べてくだせい
     ```sh
-    # Windows
-    python -m venv venv
-    venv\Scripts\activate
-
-    # macOS / Linux
-    python3 -m venv venv
-    source venv/bin/activate
+    git config [githubのメールアドレス]
+    git config [githubのpass1]
     ```
-3. **依存関係をインストール**
+3. **vscodeでコード改修**
+    今回はlocal環境での開発のため、特に仮想ノードとかにsshする必要はないです。
+    基本的にはコードの上に 
     ```sh
-    pip install -r requirements.txt
+    # NOTE: "コード概要の説明"
     ```
-4. **マイグレーションを実行**
-    ```sh
-    python manage.py migrate
-    ```
-5. **管理ユーザーを作成 (オプション)**
-    ```sh
-    python manage.py createsuperuser
-    ```
-6. **サーバーを起動**
-    ```sh
-    python manage.py runserver
-    ```
-    サーバーが起動したら、ブラウザで以下の URL にアクセスしてください：
-    ```
-    http://127.0.0.1:8000/
-    ```
+    みたいな形式でメモ書きを残しておいてほしい。日付とか編集人かは別に要らない
+4. **コミットとマージ**
+    作成したコードをgithubにコミットする⇒これはvscodeの拡張機能を使用してもOK,gitbashでコマンド叩いてもいいぞ
+    MR作成後に相手にコードレビュー依頼
+    コードレビューを受けた人はMRに修正点などを記載
+5. **単体試験**
+    wiki"(単体試験/issue番号)"にて記載
+    基本的にはペラ１でフロント作って、テーブルと紐づけ予定
+    文字列入力してしっかりテーブルに反映されてるかを正常系として実証
+    エラーの発覚を確認する準正常系に関しては今回は不要でよい...?
+    再度コードレビュー者に単体試験の項目をチェック依頼
+6. **結合試験**
+    これは機能がそろってきたら実施予定
+    テスト要件は折下と相談
 
-## 📂 プロジェクト構成
+## 📂 関連資料
+- [プロジェクト構成](https://github.com/Takasin0141/To_Do_list/wiki)
+※改修予定
+- [構成図] ("今後作成予定")
+- [画面遷移図](https://drive.google.com/file/d/1oR4KlLA_6nx9MtdRVii_EwlZXkqujwjU/view?usp=drive_link)
+- [画面詳細図]("現在作成中")
 
-- [wiki]https://github.com/Takasin0141/To_Do_list/wiki)
-
-
-## 📝 使い方
-1. **新しいタスクを追加**
-2. **タスクを編集 / 削除**
-3. **完了したタスクにチェック**
-4. **Django Admin で管理** (`/admin/` にアクセス)
-
-## 🎯 今後の改善予定
+## 🎯 基本的な搭載機能
 - ユーザー認証（ログイン / ログアウト）
 - タスクの優先度設定
-- モバイル対応 UI
+- 期限から人月を自動採取 個人のタスク・全体のタスクのそれぞれのデータ化とその出力
+- 期限逼迫によるアラート発生
+- admin/adminにて管理者画面遷移
+- 
 
-## 🛠️ 開発者向け情報
-**デバッグモードで実行**
-```sh
-python manage.py runserver --settings=todolist.settings_dev
