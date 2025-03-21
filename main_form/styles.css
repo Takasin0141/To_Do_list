@@ -1,0 +1,428 @@
+/* 基本スタイル */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    font-family: 'Roboto', sans-serif;
+}
+
+body {
+    background-color: #f5f7fb;
+    color: #333;
+}
+
+.app-container {
+    display: flex;
+    flex-direction: column;
+    min-height: 100vh;
+}
+
+/* ヘッダー */
+.header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background-color: #fff;
+    padding: 1rem 2rem;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+    position: sticky;
+    top: 0;
+    z-index: 100;
+}
+
+.logo {
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: #4a6bdf;
+}
+
+.search-bar {
+    position: relative;
+    width: 40%;
+}
+
+.search-bar input {
+    width: 100%;
+    padding: 0.75rem 1rem 0.75rem 2.5rem;
+    border: none;
+    border-radius: 50px;
+    background-color: #f5f7fb;
+    font-size: 0.9rem;
+    transition: all 0.3s ease;
+}
+
+.search-bar input:focus {
+    outline: none;
+    box-shadow: 0 0 0 2px rgba(74, 107, 223, 0.3);
+}
+
+.search-icon {
+    position: absolute;
+    left: 1rem;
+    top: 50%;
+    transform: translateY(-50%);
+    color: #aaa;
+}
+
+.header-actions {
+    display: flex;
+    align-items: center;
+    gap: 1.5rem;
+}
+
+.notification {
+    position: relative;
+    cursor: pointer;
+    color: #666;
+}
+
+.notification-badge {
+    position: absolute;
+    top: -5px;
+    right: -5px;
+    background-color: #ff5252;
+    color: white;
+    border-radius: 50%;
+    width: 18px;
+    height: 18px;
+    font-size: 0.7rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.avatar, .member-avatar, .assigned-to {
+    width: 35px;
+    height: 35px;
+    border-radius: 50%;
+    background-color: #4a6bdf;
+    color: white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 500;
+    cursor: pointer;
+}
+
+/* メインコンテナ */
+.main-container {
+    display: flex;
+    flex: 1;
+}
+
+/* サイドバー */
+.sidebar {
+    width: 250px;
+    background-color: #fff;
+    padding: 2rem 0;
+    box-shadow: 0 0 15px rgba(0, 0, 0, 0.05);
+    display: flex;
+    flex-direction: column;
+}
+
+.main-nav ul {
+    list-style: none;
+}
+
+.main-nav li {
+    margin-bottom: 0.5rem;
+}
+
+.main-nav a {
+    display: flex;
+    align-items: center;
+    padding: 0.8rem 2rem;
+    color: #666;
+    text-decoration: none;
+    transition: all 0.3s ease;
+}
+
+.main-nav a i {
+    margin-right: 1rem;
+    width: 20px;
+    text-align: center;
+    font-size: 1.1rem;
+}
+
+.main-nav li.active a {
+    color: #4a6bdf;
+    background-color: rgba(74, 107, 223, 0.1);
+    border-left: 3px solid #4a6bdf;
+}
+
+.main-nav a:hover {
+    background-color: rgba(74, 107, 223, 0.05);
+}
+
+.team-members {
+    margin-top: 2rem;
+    padding: 0 2rem;
+}
+
+.team-members h3 {
+    color: #888;
+    font-size: 0.9rem;
+    margin-bottom: 1rem;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+}
+
+.team-members ul {
+    list-style: none;
+}
+
+.team-members li {
+    display: flex;
+    align-items: center;
+    margin-bottom: 1rem;
+}
+
+.member-avatar {
+    width: 30px;
+    height: 30px;
+    font-size: 0.8rem;
+    margin-right: 1rem;
+}
+
+.member-name {
+    flex: 1;
+    font-size: 0.9rem;
+}
+
+.status-indicator {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+}
+
+.status-indicator.online {
+    background-color: #4caf50;
+}
+
+.status-indicator.away {
+    background-color: #ff9800;
+}
+
+/* メインコンテンツ */
+.content {
+    flex: 1;
+    padding: 2rem;
+}
+
+/* ダッシュボード概要 */
+.dashboard-summary {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 1.5rem;
+    margin-bottom: 2rem;
+}
+
+.summary-card {
+    background-color: #fff;
+    border-radius: 10px;
+    padding: 1.5rem;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+    text-align: center;
+    transition: transform 0.3s ease;
+}
+
+.summary-card:hover {
+    transform: translateY(-5px);
+}
+
+.summary-card h2 {
+    font-size: 2rem;
+    margin-bottom: 0.5rem;
+    color: #4a6bdf;
+}
+
+.summary-card p {
+    color: #888;
+    font-size: 0.9rem;
+}
+
+#assigned-tasks {
+    border-top: 3px solid #4a6bdf;
+}
+
+#due-soon {
+    border-top: 3px solid #ff9800;
+}
+
+#completed {
+    border-top: 3px solid #4caf50;
+}
+
+/* タスクリスト */
+.task-list-container {
+    background-color: #fff;
+    border-radius: 10px;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+    padding: 1.5rem;
+}
+
+.task-list-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1.5rem;
+}
+
+.task-list-header h2 {
+    font-size: 1.25rem;
+    color: #333;
+}
+
+.task-filters {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+}
+
+.filter-dropdown {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.5rem 1rem;
+    background-color: #f5f7fb;
+    border-radius: 5px;
+    font-size: 0.9rem;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+}
+
+.filter-dropdown:hover {
+    background-color: #edf1f7;
+}
+
+.add-task-btn {
+    padding: 0.5rem 1rem;
+    background-color: #4a6bdf;
+    color: white;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+}
+
+.add-task-btn:hover {
+    background-color: #3a59c5;
+}
+
+.task-list {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+}
+
+.task-item {
+    display: flex;
+    align-items: center;
+    padding: 1rem;
+    border-radius: 8px;
+    background-color: #f9fafc;
+    border-left: 3px solid #ddd;
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.task-item:hover {
+    transform: translateX(5px);
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+}
+
+.task-item.due-soon {
+    border-left: 3px solid #ff9800;
+}
+
+.task-item.completed {
+    border-left: 3px solid #4caf50;
+    opacity: 0.7;
+}
+
+.task-status-indicator {
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    border: 2px solid #ddd;
+    margin-right: 1rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.task-status-indicator.completed {
+    background-color: #4caf50;
+    border: none;
+    color: white;
+    font-size: 0.7rem;
+}
+
+.task-details {
+    flex: 1;
+}
+
+.task-details h3 {
+    font-size: 1rem;
+    margin-bottom: 0.25rem;
+}
+
+.task-details p {
+    font-size: 0.85rem;
+    color: #888;
+}
+
+.task-meta {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+}
+
+.due-date {
+    font-size: 0.85rem;
+    color: #666;
+}
+
+.due-date.completed-text {
+    color: #4caf50;
+}
+
+/* レスポンシブデザイン */
+@media screen and (max-width: 992px) {
+    .main-container {
+        flex-direction: column;
+    }
+
+    .sidebar {
+        width: 100%;
+        padding: 1rem 0;
+    }
+
+    .team-members {
+        display: none;
+    }
+}
+
+@media screen and (max-width: 768px) {
+    .header {
+        padding: 1rem;
+    }
+
+    .search-bar {
+        width: 70%;
+    }
+
+    .dashboard-summary {
+        grid-template-columns: 1fr;
+    }
+
+    .task-list-header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 1rem;
+    }
+
+    .task-filters {
+        width: 100%;
+        justify-content: space-between;
+    }
+}
