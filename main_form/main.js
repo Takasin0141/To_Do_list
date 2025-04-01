@@ -125,9 +125,9 @@ document.addEventListener('DOMContentLoaded', function() {
                             <label for="task-assignee">担当者</label>
                             <select id="task-assignee" name="assignee">
                                 <option value="YT">自分</option>
-                                <option value="TK">田中 健太</option>
-                                <option value="YS">山田 咲</option>
-                                <option value="KM">鈴木 誠</option>
+                                <option value="TK">戸倉 悠偉</option>
+                                <option value="YS">佐藤 朱音</option>
+                                <option value="KM">新井 結</option>
                             </select>
                         </div>
                         <div class="form-actions">

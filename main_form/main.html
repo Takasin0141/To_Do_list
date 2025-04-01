@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>TaskFlow - タスク管理アプリ</title>
     <!-- CSSファイルの読み込み -->
-    <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="main.css">
     <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
 </head>
@@ -13,7 +13,7 @@
     <div class="app-container">
         <!-- ヘッダー -->
         <header class="header">
-            <div class="logo">TaskFlow</div>
+            <div class="logo">MainPage</div>
             <div class="search-bar">
                 <i class="fas fa-search search-icon"></i>
                 <input type="text" placeholder="タスクを検索..." id="search-input">
@@ -60,17 +60,17 @@
                     <ul id="team-members-list">
                         <li>
                             <div class="member-avatar" style="background-color: #4caf50;">TK</div>
-                            <span class="member-name">田中 健太</span>
+                            <span class="member-name">戸倉 悠偉</span>
                             <span class="status-indicator online"></span>
                         </li>
                         <li>
                             <div class="member-avatar" style="background-color: #ff9800;">YS</div>
-                            <span class="member-name">山田 咲</span>
+                            <span class="member-name">佐藤 朱音</span>
                             <span class="status-indicator online"></span>
                         </li>
                         <li>
                             <div class="member-avatar" style="background-color: #9c27b0;">KM</div>
-                            <span class="member-name">鈴木 誠</span>
+                            <span class="member-name">新井 結</span>
                             <span class="status-indicator away"></span>
                         </li>
                     </ul>
@@ -211,10 +211,10 @@
                     <div class="form-group">
                         <label for="task-assignee">担当者</label>
                         <select id="task-assignee" required>
-                            <option value="YT">山田 太郎 (自分)</option>
-                            <option value="TK">田中 健太</option>
-                            <option value="YS">山田 咲</option>
-                            <option value="KM">鈴木 誠</option>
+                            <option value="YT">對馬 崇人 (自分)</option>
+                            <option value="TK">戸倉 悠偉 </option>
+                            <option value="YS">佐藤 朱音</option>
+                            <option value="KM">新井 結</option>
                         </select>
                     </div>
                     <div class="form-group">
@@ -242,7 +242,7 @@
                     <i class="fas fa-check"></i>
                 </div>
                 <div class="notification-content">
-                    <p><strong>田中 健太</strong>がタスク「デザインレビュー」を完了しました</p>
+                    <p><strong>戸倉 悠偉</strong>がタスク「デザインレビュー」を完了しました</p>
                     <span class="notification-time">30分前</span>
                 </div>
             </div>
@@ -260,7 +260,7 @@
                     <i class="fas fa-user-plus"></i>
                 </div>
                 <div class="notification-content">
-                    <p><strong>鈴木 誠</strong>があなたを「顧客フィードバックの分析」に追加しました</p>
+                    <p><strong>新井 結</strong>があなたを「顧客フィードバックの分析」に追加しました</p>
                     <span class="notification-time">3時間前</span>
                 </div>
             </div>
@@ -296,6 +296,6 @@
     <div class="overlay" id="overlay"></div>
 
     <!-- JavaScriptファイルの読み込み -->
-    <script src="script.js"></script>
+    <script src="main.js"></script>
 </body>
 </html>
