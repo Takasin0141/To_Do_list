@@ -1,0 +1,208 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ page_title|default:"タスク詳細" }} - TaskFlow</title>
+    <link rel="stylesheet" href="{% static 'helloworldapp/css/styles.css' %}">
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        /* 共通スタイルは styles.css へ */
+        .task-detail-card {
+            background-color: #fff;
+            padding: 25px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+        }
+        .task-detail-card h2 {
+            margin-top: 0;
+            margin-bottom: 20px;
+            border-bottom: 1px solid #eee;
+            padding-bottom: 15px;
+        }
+        .task-detail-item {
+            margin-bottom: 15px;
+        }
+        .task-detail-item strong {
+            display: inline-block;
+            width: 100px; /* ラベル幅を固定 */
+            color: #555;
+        }
+        .task-detail-item p {
+            margin: 5px 0 0 0;
+            padding-left: 105px; /* ラベルとのインデント */
+            white-space: pre-wrap; /* 改行をそのまま表示 */
+            word-break: break-word;
+        }
+        .task-actions {
+            margin-top: 30px;
+            padding-top: 20px;
+            border-top: 1px solid #eee;
+            text-align: right;
+        }
+        .task-actions .btn {
+            padding: 8px 15px;
+            margin-left: 10px;
+            text-decoration: none;
+            border-radius: 4px;
+            font-size: 0.9em;
+            cursor: pointer;
+        }
+        .btn-edit {
+            background-color: #ffc107;
+            color: #212529;
+            border: 1px solid #ffc107;
+        }
+        .btn-edit:hover {
+            background-color: #e0a800;
+        }
+        .btn-delete {
+            background-color: #dc3545;
+            color: white;
+            border: 1px solid #dc3545;
+        }
+        .btn-delete:hover {
+            background-color: #c82333;
+        }
+        .back-link {
+            display: inline-block;
+            margin-bottom: 20px;
+            color: #007bff;
+            text-decoration: none;
+        }
+        .back-link:hover {
+            text-decoration: underline;
+        }
+        .status-badge {
+            padding: 0.25em 0.6em;
+            font-size: 0.85em;
+            font-weight: 700;
+            line-height: 1;
+            color: #fff;
+            text-align: center;
+            white-space: nowrap;
+            vertical-align: baseline;
+            border-radius: 0.25rem;
+        }
+        .status-pending { background-color: #6c757d; } /* 未着手 */
+        .status-in_progress { background-color: #007bff; } /* 進行中 */
+        .status-completed { background-color: #28a745; } /* 完了 */
+        .status-on_hold { background-color: #ffc107; color: #212529;} /* 保留 */
+
+        .priority-badge {
+            /* 優先度に応じてスタイルを変えることも可能 */
+            font-weight: bold;
+        }
+        .priority-1 { color: #28a745; } /* 低 */
+        .priority-2 { color: #ffc107; } /* 中 */
+        .priority-3 { color: #dc3545; } /* 高 */
+
+    </style>
+</head>
+<body>
+    <div class="app-container">
+        <header class="header">
+            <div class="logo">TaskFlow</div>
+            <div class="search-bar"><i class="fas fa-search search-icon"></i><input type="text" placeholder="タスクを検索..." id="search-input"></div>
+            <div class="header-actions">
+                <div class="notification" id="notification-icon"><i class="fas fa-bell"></i></div>
+                <div class="user-profile" id="user-profile"><div class="avatar">{% if user.is_authenticated %}{{ user.username.0|upper }}{{ user.username.1|upper|default:'' }}{% else %}<i class="fas fa-user"></i>{% endif %}</div></div>
+            </div>
+        </header>
+
+        <div class="main-container">
+            <aside class="sidebar">
+                <nav class="main-nav">
+                    <ul id="navigation-menu">
+                        <li><a href="{% url 'helloworldapp:main_page' %}"><i class="fas fa-chart-pie"></i>ダッシュボード</a></li>
+                        {% if user.is_authenticated %}
+                        <li><a href="{% url 'helloworldapp:my_tasks_view' %}"><i class="fas fa-tasks"></i>マイタスク</a></li>
+                        {% endif %}
+                        <li><a href="#"><i class="fas fa-folder"></i>プロジェクト</a></li>
+                        <li><a href="#"><i class="fas fa-users"></i>チーム</a></li>
+                        <li><a href="#"><i class="fas fa-calendar"></i>カレンダー</a></li>
+                        <li><a href="#"><i class="fas fa-chart-line"></i>レポート</a></li>
+                    </ul>
+                </nav>
+                <div class="team-members">
+                    <h3>チームメンバー</h3>
+                    <ul id="team-members-list">
+                        <li><div class="member-avatar" style="background-color: #4caf50;">TK</div> <span class="member-name">戸倉 悠偉</span> <span class="status-indicator online"></span></li>
+                        <li><div class="member-avatar" style="background-color: #ff9800;">YS</div> <span class="member-name">佐藤 朱音</span> <span class="status-indicator online"></span></li>
+                        <li><div class="member-avatar" style="background-color: #9c27b0;">KM</div> <span class="member-name">新井 結</span> <span class="status-indicator away"></span></li>
+                    </ul>
+                </div>
+            </aside>
+
+            <main class="content">
+                <a href="javascript:history.back()" class="back-link"><i class="fas fa-arrow-left"></i> 前のページに戻る</a>
+                
+                <div class="task-detail-card">
+                    <h2>{{ task.title }}</h2>
+
+                    <div class="task-detail-item">
+                        <strong>ステータス:</strong>
+                        <span class="status-badge status-{{ task.status }}">{{ task.get_status_display }}</span>
+                    </div>
+                    
+                    <div class="task-detail-item">
+                        <strong>優先度:</strong>
+                        <span class="priority-badge priority-{{ task.priority }}">{{ task.get_priority_display }}</span>
+                    </div>
+
+                    {% if task.project %}
+                    <div class="task-detail-item">
+                        <strong>プロジェクト:</strong> {{ task.project.name }}
+                    </div>
+                    {% endif %}
+
+                    {% if task.assignee %}
+                    <div class="task-detail-item">
+                        <strong>担当者:</strong> {{ task.assignee.get_full_name|default:task.assignee.username }}
+                    </div>
+                    {% endif %}
+
+                    {% if task.due_date %}
+                    <div class="task-detail-item">
+                        <strong>期限日:</strong> {{ task.due_date|date:"Y年n月j日" }}
+                    </div>
+                    {% endif %}
+                    
+                    <div class="task-detail-item">
+                        <strong>詳細説明:</strong>
+                        {% if task.description %}
+                            <p>{{ task.description|linebreaksbr }}</p>
+                        {% else %}
+                            <p>(説明なし)</p>
+                        {% endif %}
+                    </div>
+
+                    <div class="task-detail-item">
+                        <strong>作成日時:</strong> {{ task.created_at|date:"Y年n月j日 H:i" }}
+                    </div>
+                    <div class="task-detail-item">
+                        <strong>最終更新日時:</strong> {{ task.updated_at|date:"Y年n月j日 H:i" }}
+                    </div>
+
+                    <div class="task-actions">
+                        {# タスク編集・削除機能は後ほど実装 #}
+                        <a href="#" class="btn btn-edit"><i class="fas fa-edit"></i> 編集</a>
+                        <a href="#" class="btn btn-delete"><i class="fas fa-trash-alt"></i> 削除</a>
+                    </div>
+                </div>
+            </main>
+        </div>
+
+        <div class="user-menu" id="user-menu" style="display: none;">
+            {% if user.is_authenticated %}
+            <div class="user-menu-header"><div class="avatar">{{ user.username.0|upper }}{{ user.username.1|upper|default:'' }}</div><div class="user-info"><h3>{{ user.get_full_name|default:user.username }}</h3><p>{{ user.email|default:"メール未設定" }}</p></div></div>
+            <div class="user-menu-items"><a href="{% url 'helloworldapp:main_page' %}" class="user-menu-item"><i class="fas fa-chart-pie"></i> ダッシュボード</a><a href="{% url 'helloworldapp:logout_view' %}" class="user-menu-item logout"><i class="fas fa-sign-out-alt"></i> ログアウト</a></div>
+            {% else %}<div class="user-menu-items"><a href="{% url 'helloworldapp:login_view' %}" class="user-menu-item"><i class="fas fa-sign-in-alt"></i> ログイン</a></div>{% endif %}
+        </div>
+        <div class="overlay" id="overlay" style="display: none;"></div>
+    </div>
+    <script src="{% static 'helloworldapp/js/script.js' %}"></script>
+</body>
+</html>
