@@ -1,120 +1,22 @@
+{% extends "helloworldapp/base_auth.html" %}
 {% load static %}
-<!DOCTYPE html>
-<html lang="ja">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{{ page_title|default:"新規登録" }} - TaskFlow</title>
-    <link rel="stylesheet" href="{% static 'helloworldapp/css/styles.css' %}"> {# メインのCSSを流用 #}
-    <style>
-        body {
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            min-height: 100vh;
-            background-color: #f4f7f6;
-            font-family: 'Roboto', sans-serif;
-            padding: 20px;
-        }
-        .signup-container {
-            background-color: #fff;
-            padding: 30px 40px;
-            border-radius: 8px;
-            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
-            width: 100%;
-            max-width: 450px; /* 少し幅を広めに */
-            text-align: center;
-        }
-        .signup-container h2 {
-            margin-bottom: 25px;
-            color: #333;
-            font-weight: 500;
-        }
-        .signup-container form p {
-            margin-bottom: 15px;
-            text-align: left;
-        }
-        .signup-container form label {
-            display: block;
-            margin-bottom: 5px;
-            color: #555;
-            font-weight: 500;
-        }
-        .signup-container form input[type="text"],
-        .signup-container form input[type="password"] {
-            width: calc(100% - 20px);
-            padding: 10px;
-            border: 1px solid #ddd;
-            border-radius: 4px;
-            box-sizing: border-box;
-        }
-        .signup-container form .helptext { /* UserCreationFormのヘルプテキスト用 */
-            font-size: 0.85em;
-            color: #777;
-            margin-top: 5px;
-            display: block;
-            text-align: left;
-        }
-        .signup-container form ul.errorlist { /* UserCreationFormのエラーリスト用 */
-            list-style-type: none;
-            padding: 0;
-            color: red;
-            font-size: 0.9em;
-            margin-top: 5px;
-            text-align: left;
-        }
-        .signup-container button[type="submit"] {
-            background-color: #28a745; /* 登録ボタンの色を緑に */
-            color: white;
-            padding: 12px 20px;
-            border: none;
-            border-radius: 4px;
-            cursor: pointer;
-            font-size: 16px;
-            font-weight: 500;
-            width: 100%;
-            transition: background-color 0.3s ease;
-        }
-        .signup-container button[type="submit"]:hover {
-            background-color: #218838;
-        }
-        .signup-container .links {
-            margin-top: 20px;
-            font-size: 0.9em;
-        }
-        .signup-container .links a {
-            color: #007bff;
-            text-decoration: none;
-        }
-        .signup-container .links a:hover {
-            text-decoration: underline;
-        }
-    </style>
-</head>
-<body>
-    <div class="signup-container">
-        <h2>{{ page_title|default:"新規ユーザー登録" }}</h2>
-        <form method="post" action="{% url 'helloworldapp:signup_view' %}"> {# actionは signup_view のURLに #}
-            {% csrf_token %}
-            
-            {# フォーム全体のノンフィールドエラーを表示 #}
-            {% if form.non_field_errors %}
-                <ul class="errorlist nonfield">
-                    {% for error in form.non_field_errors %}
-                        <li>{{ error }}</li>
-                    {% endfor %}
-                </ul>
-            {% endif %}
 
-            {# UserCreationFormのフィールドをレンダリング #}
-            {# `form.as_p` は各要素を <p> タグで囲みます #}
+{% block title %}{{ page_title|default:"新規登録" }} - TaskFlow{% endblock title %}
+
+{% block head_extra %}
+    {# このページ固有のスタイルは styles.css に移動済み #}
+{% endblock head_extra %}
+
+{% block content %}
+    <div class="auth-form-container signup-form"> {# ★★★ signup-form クラスを追加 (ボタンの色分け用) ★★★ #}
+        <h2><i class="fas fa-user-plus"></i> {{ page_title|default:"新規ユーザー登録" }}</h2>
+        <form method="post" action="{% url 'helloworldapp:signup_view' %}">
+            {% csrf_token %}
             {{ form.as_p }}
-            
             <button type="submit">登録する</button>
         </form>
         <div class="links">
             アカウントをお持ちですか？ <a href="{% url 'helloworldapp:login_view' %}">ログイン</a>
         </div>
     </div>
-</body>
-</html>
+{% endblock content %}

@@ -1,53 +1,72 @@
 from django import forms
-from .models import Task, Project, User # Userモデルもインポート
+from .models import Task, Project, User, Team # Teamモデルをインポート
 
 class TaskForm(forms.ModelForm):
-    # プロジェクトと担当者の選択肢を、未選択も許容するように調整
     project = forms.ModelChoiceField(
         queryset=Project.objects.all(),
-        required=False, # プロジェクトは必須ではない
+        required=False,
         label="プロジェクト",
-        empty_label="----- (プロジェクトなし) -----" # 未選択時のラベル
+        empty_label="----- (プロジェクトなし) -----"
     )
     assignee = forms.ModelChoiceField(
-        queryset=User.objects.all(),
-        required=False, # 担当者は必須ではない
+        queryset=User.objects.all().order_by('username'), # ユーザー名順で表示
+        required=False,
         label="担当者",
-        empty_label="----- (担当者なし) -----" # 未選択時のラベル
+        empty_label="----- (担当者なし) -----"
+    )
+    assigned_team = forms.ModelChoiceField(
+        queryset=Team.objects.all().order_by('name'), # チーム名順で表示
+        required=False, # チーム割り当ては必須ではない
+        label="担当チーム",
+        empty_label="----- (チームなし) -----" # 未選択時のラベル
     )
     due_date = forms.DateField(
-        widget=forms.DateInput(attrs={'type': 'date'}), # HTML5の日付選択ウィジェットを使用
-        required=False, # 期限日も必須ではない
+        widget=forms.DateInput(attrs={'type': 'date'}),
+        required=False,
         label="期限日"
     )
 
     class Meta:
         model = Task
-        fields = ['title', 'description', 'project', 'assignee', 'due_date', 'priority', 'status']
-        # labels はMetaクラス内ではなく、フィールド定義時に直接指定する方が一般的です。
-        # widgets も同様にフィールド定義時に指定できます。
-        # もしフィールドごとに個別の設定が不要であれば、上記のように直接フィールド名をリストで指定するだけで十分です。
-
-        # 以下のように widgets を使って、各フィールドのHTML属性などを細かく設定することも可能です。
+        fields = [
+            'title', 
+            'description', 
+            'project', 
+            'assignee', 
+            'assigned_team', 
+            'due_date', 
+            'priority', 
+            'status'
+        ]
         widgets = {
             'title': forms.TextInput(attrs={'placeholder': '例: 新しいウェブサイトのデザイン'}),
             'description': forms.Textarea(attrs={'rows': 4, 'placeholder': 'タスクの詳細な説明を入力します'}),
-            # 'status': forms.Select(choices=Task.STATUS_CHOICES) # ModelFormは自動で設定してくれることが多い
         }
-        # labels = {
-        #     'title': 'タスク名',
-        #     'description': '詳細説明',
-        #     'priority': '優先度',
-        #     'status': 'ステータス',
-        # }
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        # フォームフィールドの表示名をモデルのverbose_nameから取得（もしモデルで定義されていれば）
-        # もしくは、ここで動的にラベルを設定することも可能
         for field_name, field in self.fields.items():
-            if not field.label: # 明示的にラベルが設定されていない場合
-                field.label = Task._meta.get_field(field_name).verbose_name.capitalize()
+            if hasattr(Task._meta.get_field(field_name), 'verbose_name'):
+                 model_field_verbose_name = Task._meta.get_field(field_name).verbose_name
+                 if model_field_verbose_name and not field.label:
+                    field.label = model_field_verbose_name.capitalize()
 
-        # projectとassigneeの選択肢に、現在のユーザーが選択しやすいような工夫も可能
-        # 例えば、User.objects.filter(is_active=True) のようにアクティブユーザーのみに絞るなど
+class TeamForm(forms.ModelForm): # ★★★ この TeamForm クラスが重要です ★★★
+    class Meta:
+        model = Team # Teamモデルを参照
+        fields = ['name', 'description'] # ユーザーに入力してもらうフィールド
+        widgets = {
+            'name': forms.TextInput(attrs={'placeholder': '例: 開発チームA、マーケティング部門'}),
+            'description': forms.Textarea(attrs={'rows': 3, 'placeholder': 'チームの目的や概要などを入力します'}),
+        }
+        labels = { 
+            'name': 'チーム名',
+            'description': 'チームの説明',
+        }
+        help_texts = { 
+            'name': '他のチームと区別できる一意のチーム名を入力してください。',
+        }
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.fields['name'].required = True # チーム名は必須

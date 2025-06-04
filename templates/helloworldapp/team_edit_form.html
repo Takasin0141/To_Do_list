@@ -1,0 +1,55 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ page_title|default:"チーム情報編集" }} - TaskFlow</title>
+    <link rel="stylesheet" href="{% static 'helloworldapp/css/styles.css' %}">
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+
+</head>
+<body>
+
+    {% if messages %}
+        <ul class="messages">
+            {% for message in messages %}
+                <li{% if message.tags %} class="{{ message.tags }}"{% endif %}>{{ message }}</li>
+            {% endfor %}
+        </ul>
+    {% endif %}
+
+    <div class="form-container">
+        <h2><i class="fas fa-edit"></i> {{ page_title|default:"チーム情報編集" }}</h2>
+        
+        <form method="post"> {# action属性は空 = 現在のURL (team_edit_view) にPOST #}
+            {% csrf_token %}
+            
+            {% if form.non_field_errors %}
+                <ul class="errorlist nonfield">
+                    {% for error in form.non_field_errors %}
+                        <li>{{ error }}</li>
+                    {% endfor %}
+                </ul>
+            {% endif %}
+
+            {% for field in form %}
+                <div class="form-group">
+                    {{ field.label_tag }}
+                    {{ field }}
+                    {% if field.help_text %}
+                        <small class="form-text text-muted">{{ field.help_text }}</small>
+                    {% endif %}
+                    {{ field.errors }}
+                </div>
+            {% endfor %}
+            
+            <div class="form-actions">
+                <a href="{% url 'helloworldapp:team_detail_view' team.id %}" class="btn-cancel">キャンセル</a>
+                <button type="submit">更新する</button>
+            </div>
+        </form>
+    </div>
+</body>
+</html>

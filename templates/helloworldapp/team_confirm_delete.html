@@ -4,10 +4,11 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{{ page_title|default:"タスク詳細" }} - TaskFlow</title>
+    <title>{{ page_title|default:"チーム削除確認" }} - TaskFlow</title>
     <link rel="stylesheet" href="{% static 'helloworldapp/css/styles.css' %}">
     <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+
 </head>
 <body>
     <div class="app-container">
@@ -29,7 +30,7 @@
                         <li><a href="{% url 'helloworldapp:my_tasks_view' %}"><i class="fas fa-tasks"></i>マイタスク</a></li>
                         <li><a href="{% url 'helloworldapp:my_page_view' %}"><i class="fas fa-user-circle"></i>マイページ</a></li>
                         <li><a href="{% url 'helloworldapp:calendar_view' %}"><i class="fas fa-calendar"></i>カレンダー</a></li>
-                        <li {% if request.resolver_match.url_name == 'team_list_view' or request.resolver_match.url_name == 'team_detail_view' or request.resolver_match.url_name == 'manage_team_members_view' or request.resolver_match.url_name == 'team_edit_view' or request.resolver_match.url_name == 'team_delete_view' or request.resolver_match.url_name == 'leave_team_view' %}class="active"{% endif %}><a href="{% url 'helloworldapp:team_list_view' %}"><i class="fas fa-users"></i>チーム</a></li>
+                        <li {% if request.resolver_match.url_name == 'team_list_view' or request.resolver_match.url_name == 'team_detail_view' or request.resolver_match.url_name == 'manage_team_members_view' or request.resolver_match.url_name == 'team_edit_view' or request.resolver_match.url_name == 'team_delete_view' %}class="active"{% endif %}><a href="{% url 'helloworldapp:team_list_view' %}"><i class="fas fa-users"></i>チーム</a></li>
                         {% endif %}
                         <li><a href="#"><i class="fas fa-folder"></i>プロジェクト</a></li>
                         <li><a href="#"><i class="fas fa-chart-line"></i>レポート</a></li>
@@ -39,32 +40,31 @@
             </aside>
 
             <main class="content">
-                <a href="javascript:history.back()" class="back-link"><i class="fas fa-arrow-left"></i> 前のページに戻る</a>
-                
-                <div class="task-detail-card">
-                    <h2>{{ task.title }}</h2>
-                    <div class="task-detail-item"><strong>ステータス:</strong> <span class="status-badge status-{{ task.status }}">{{ task.get_status_display }}</span></div>
-                    <div class="task-detail-item"><strong>優先度:</strong> <span class="priority-badge priority-{{ task.priority }}">{{ task.get_priority_display }}</span></div>
-                    {% if task.project %}<div class="task-detail-item"><strong>プロジェクト:</strong> {{ task.project.name }}</div>{% endif %}
-                    {% if task.assignee %}<div class="task-detail-item"><strong>担当者:</strong> {{ task.assignee.get_full_name|default:task.assignee.username }}</div>{% endif %}
+                 {# Djangoメッセージフレームワークからのメッセージを表示 (ビューでエラー時に使用される可能性) #}
+                {% if messages %}
+                    <ul class="messages">
+                        {% for message in messages %}
+                            <li{% if message.tags %} class="{{ message.tags }}"{% endif %}>{{ message }}</li>
+                        {% endfor %}
+                    </ul>
+                {% endif %}
+
+                <div class="back-link-container">
+                    <a href="{% url 'helloworldapp:team_detail_view' team.id %}" class="back-link"><i class="fas fa-arrow-left"></i> 「{{ team.name }}」詳細に戻る</a>
+                </div>
+
+                <div class="confirm-delete-container">
+                    <h2><i class="fas fa-exclamation-triangle"></i> {{ page_title }}</h2>
+                    <p>本当にチーム「<strong>{{ team.name }}</strong>」を削除しますか？</p>
+                    <p style="color: #777; font-size: 0.9em;">この操作は元に戻せません。チームに関連する情報（もしあれば）も影響を受ける可能性があります。</p>
                     
-                    {# ★★★ 担当チームの表示を追加 ★★★ #}
-                    {% if task.assigned_team %}
-                    <div class="task-detail-item">
-                        <strong>担当チーム:</strong> <a href="{% url 'helloworldapp:team_detail_view' task.assigned_team.id %}">{{ task.assigned_team.name }}</a>
-                    </div>
-                    {% endif %}
-                    {# ★★★ ここまで ★★★ #}
-
-                    {% if task.due_date %}<div class="task-detail-item"><strong>期限日:</strong> {{ task.due_date|date:"Y年n月j日" }}</div>{% endif %}
-                    <div class="task-detail-item"><strong>詳細説明:</strong> {% if task.description %}<p>{{ task.description|linebreaksbr }}</p>{% else %}<p>(説明なし)</p>{% endif %}</div>
-                    <div class="task-detail-item"><strong>作成日時:</strong> {{ task.created_at|date:"Y年n月j日 H:i" }}</div>
-                    <div class="task-detail-item"><strong>最終更新日時:</strong> {{ task.updated_at|date:"Y年n月j日 H:i" }}</div>
-
-                    <div class="task-actions">
-                        <a href="{% url 'helloworldapp:task_edit_view' task.id %}" class="btn btn-edit"><i class="fas fa-edit"></i> 編集</a>
-                        <a href="{% url 'helloworldapp:task_delete_view' task.id %}" class="btn btn-delete"><i class="fas fa-trash-alt"></i> 削除</a>
-                    </div>
+                    <form method="post"> {# action属性は空 = 現在のURL (team_delete_view) にPOST #}
+                        {% csrf_token %}
+                        <div class="confirm-actions">
+                            <button type="submit" class="btn btn-danger">はい、削除します</button>
+                            <a href="{% url 'helloworldapp:team_detail_view' team.id %}" class="btn btn-secondary">いいえ、キャンセルします</a>
+                        </div>
+                    </form>
                 </div>
             </main>
         </div>

@@ -1,92 +1,48 @@
-<!DOCTYPE html>
-<html lang="ja">
-<head>
-    {% load static %}
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>TaskFlow - タスク管理アプリ</title>
-    <link rel="stylesheet" href="{% static 'helloworldapp/css/styles.css' %}">
-    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
-    <style>
-        .form-group .errorlist { list-style-type: none; padding: 0; margin: 5px 0 0 0; color: red; font-size: 0.9em; }
-        .form-group .errorlist li { margin-bottom: 3px; }
-        .non-field-errors .errorlist { list-style-type: none; padding: 10px; margin-bottom: 15px; color: red; background-color: #ffebeb; border: 1px solid red; border-radius: 4px; }
-    </style>
-</head>
-<body>
-    <div class="app-container">
-        <header class="header">
-            <div class="logo">TaskFlow</div>
-            <div class="search-bar"><i class="fas fa-search search-icon"></i><input type="text" placeholder="タスクを検索..." id="search-input"></div>
-            <div class="header-actions">
-                <div class="notification" id="notification-icon"><i class="fas fa-bell"></i></div>
-                <div class="user-profile" id="user-profile"><div class="avatar">{% if user.is_authenticated %}{{ user.username.0|upper }}{{ user.username.1|upper|default:'' }}{% else %}<i class="fas fa-user"></i>{% endif %}</div></div>
-            </div>
-        </header>
+{% extends "helloworldapp/base.html" %}
+{% load static %}
 
-        <div class="main-container">
-            <aside class="sidebar">
-                <nav class="main-nav">
-                    <ul id="navigation-menu">
-                        <li {% if request.resolver_match.url_name == 'main_page' %}class="active"{% endif %} data-view="dashboard"><a href="{% url 'helloworldapp:main_page' %}"><i class="fas fa-chart-pie"></i>ダッシュボード</a></li>
-                        {% if user.is_authenticated %}<li {% if request.resolver_match.url_name == 'my_tasks_view' %}class="active"{% endif %} data-view="my-tasks"><a href="{% url 'helloworldapp:my_tasks_view' %}"><i class="fas fa-tasks"></i>マイタスク</a></li>{% endif %}
-                        <li data-view="projects"><a href="#"><i class="fas fa-folder"></i>プロジェクト</a></li>
-                        <li data-view="team"><a href="#"><i class="fas fa-users"></i>チーム</a></li>
-                        <li data-view="calendar"><a href="#"><i class="fas fa-calendar"></i>カレンダー</a></li>
-                        <li data-view="reports"><a href="#"><i class="fas fa-chart-line"></i>レポート</a></li>
-                    </ul>
-                </nav>
-                <div class="team-members">
-                    <h3>チームメンバー</h3>
-                    <ul id="team-members-list">
-                        <li><div class="member-avatar" style="background-color: #4caf50;">TK</div> <span class="member-name">戸倉 悠偉</span> <span class="status-indicator online"></span></li>
-                        <li><div class="member-avatar" style="background-color: #ff9800;">YS</div> <span class="member-name">佐藤 朱音</span> <span class="status-indicator online"></span></li>
-                        <li><div class="member-avatar" style="background-color: #9c27b0;">KM</div> <span class="member-name">新井 結</span> <span class="status-indicator away"></span></li>
-                    </ul>
-                </div>
-            </aside>
-            <main class="content">
-                <section class="dashboard-summary">
-                    <div class="summary-card" id="assigned-tasks" data-filter="all"><h2>{{ assigned_tasks_count|default:"0" }}</h2> <p>担当タスク (未完了)</p></div>
-                    <div class="summary-card" id="due-soon" data-filter="due-soon"><h2>{{ due_soon_count|default:"0" }}</h2> <p>期限間近 (7日以内)</p></div>
-                    <div class="summary-card" id="completed" data-filter="completed"><h2>{{ completed_count|default:"0" }}</h2> <p>完了タスク</p></div>
-                </section>
-                <section class="task-list-container">
-                    <div class="task-list-header"><h2>タスク一覧</h2><div class="task-filters"><div class="filter-dropdown" id="status-filter"><span>すべて</span> <i class="fas fa-chevron-down"></i></div><div class="filter-dropdown" id="sort-filter"><span>日付順</span> <i class="fas fa-chevron-down"></i></div><button class="add-task-btn" id="add-task-button"><i class="fas fa-plus"></i> 追加</button></div></div>
-                    <div class="task-list" id="task-list">
-                        {% for task in tasks %}
-                        <div class="task-item {% if task.status == 'completed' %}completed{% endif %}" data-task-id="{{ task.id }}">
-                            <div class="task-status-indicator {% if task.status == 'completed' %}completed{% endif %}" data-status="{{ task.status }}">{% if task.status == 'completed' %}<i class="fas fa-check"></i>{% endif %}</div>
-                            <div class="task-details">
-                                <h3><a href="{% url 'helloworldapp:task_detail_view' task.id %}">{{ task.title }}</a></h3> {# ★★★ ここを修正 ★★★ #}
-                                <p>{% if task.project %}{{ task.project.name }}{% else %}個人タスク{% endif %}</p>
-                            </div>
-                            <div class="task-meta">{% if task.status == 'completed' %}<span class="due-date completed-text">完了</span>{% elif task.due_date %}<span class="due-date">{{ task.due_date|date:"n月j日" }}</span>{% else %}<span class="due-date">期限なし</span>{% endif %}{% if task.assignee %}<div class="assigned-to" title="{{ task.assignee.username }}" style="background-color: #aabbcc; color: white; text-align: center; line-height: 24px; font-weight: bold; border-radius: 50%; width: 24px; height: 24px; font-size: 12px; display: inline-block;">{{ task.assignee.username.0|upper }}{{ task.assignee.username.1|upper|default:'' }}</div>{% endif %}</div>
-                        </div>
-                        {% empty %}
-                        <div style="padding: 20px; text-align: center;"><p>現在表示できるタスクはありません。</p><p>右上の「追加」ボタンから新しいタスクを作成できます。</p></div>
-                        {% endfor %}
-                    </div>
-                </section>
-            </main>
-        </div>
+{% block title %}ダッシュボード{% endblock title %}
 
-        <div class="modal" id="add-task-modal">
-            <div class="modal-content"><div class="modal-header"><h2>新規タスク追加</h2><span class="close-modal" id="close-task-modal">&times;</span></div><div class="modal-body"><form id="add-task-form" method="POST" action="{% url 'helloworldapp:main_page' %}">{% csrf_token %}{% if form.non_field_errors %}<div class="non-field-errors">{{ form.non_field_errors }}</div>{% endif %}{% for field in form %}<div class="form-group">{{ field.label_tag }}{{ field }}{% if field.help_text %}<small class="form-text text-muted">{{ field.help_text }}</small>{% endif %}{{ field.errors }}</div>{% endfor %}<div class="form-actions"><button type="button" class="cancel-btn" id="cancel-add-task">キャンセル</button><button type="submit" class="submit-btn">保存</button></div></form></div></div>
-        </div>
-        
-        <div class="notification-panel" id="notification-panel">
-            <div class="notification-header"><h3>通知</h3> <span class="mark-all-read" id="mark-all-read">すべて既読にする</span></div>
-            <div class="notification-list"><div class="notification-item unread"><div class="notification-icon" style="background-color: #4caf50;"><i class="fas fa-check"></i></div><div class="notification-content"><p><strong>戸倉 悠偉</strong>がタスク「デザインレビュー」を完了しました</p><span class="notification-time">30分前</span></div></div></div>
-        </div>
+{% block head_extra %}
+    {# このページ固有のスタイルは styles.css に移動済み #}
+{% endblock head_extra %}
 
-        <div class="user-menu" id="user-menu">
-            {% if user.is_authenticated %}<div class="user-menu-header"><div class="avatar">{{ user.username.0|upper }}{{ user.username.1|upper|default:'' }}</div><div class="user-info"><h3>{{ user.get_full_name|default:user.username }}</h3><p>{{ user.email|default:"メール未設定" }}</p></div></div><div class="user-menu-items"><a href="#" class="user-menu-item" id="profile-settings"><i class="fas fa-user-cog"></i> プロフィール設定</a><a href="#" class="user-menu-item" id="app-settings"><i class="fas fa-cog"></i> アプリ設定</a><a href="#" class="user-menu-item" id="help-center"><i class="fas fa-question-circle"></i> ヘルプセンター</a><a href="{% url 'helloworldapp:logout_view' %}" class="user-menu-item logout" id="logout-button"><i class="fas fa-sign-out-alt"></i> ログアウト</a></div>{% else %}<div class="user-menu-items"><a href="{% url 'helloworldapp:login_view' %}" class="user-menu-item"><i class="fas fa-sign-in-alt"></i> ログイン</a><a href="{% url 'helloworldapp:signup_view' %}" class="user-menu-item"><i class="fas fa-user-plus"></i> 新規登録</a></div>{% endif %}
-        </div>
+{% block content %}
+    <section class="dashboard-summary">
+        <div class="summary-card" id="assigned-tasks" data-filter="all"><h2>{{ assigned_tasks_count|default:"0" }}</h2> <p>担当タスク (未完了)</p></div>
+        <div class="summary-card" id="due-soon" data-filter="due-soon"><h2>{{ due_soon_count|default:"0" }}</h2> <p>期限間近 (7日以内)</p></div>
+        <div class="summary-card" id="completed" data-filter="completed"><h2>{{ completed_count|default:"0" }}</h2> <p>完了タスク</p></div>
+    </section>
 
-        <div class="overlay" id="overlay"></div>
-        <script src="{% static 'helloworldapp/js/script.js' %}"></script>
+    {% if user.is_authenticated %}
+    <div class="actions-header">
+        <a href="{% url 'helloworldapp:team_create_view' %}" class="btn-create-team">
+            <i class="fas fa-plus-circle"></i> 新しいチームを作成
+        </a>
     </div>
-</body>
-</html>
+    {% endif %}
+
+    <section class="project-list-container">
+        <h2><i class="fas fa-folder-open"></i> プロジェクト一覧</h2>
+        <div class="project-grid">
+            {% if projects %}{% for project_item in projects %}<div class="project-item-card"><h3><a href="{% url 'helloworldapp:project_board_view' project_item.id %}">{{ project_item.name }}</a></h3>{% if project_item.description %}<p>{{ project_item.description|truncatewords_html:15 }}</p>{% else %}<p style="color:#999;">(説明なし)</p>{% endif %}<div class="project-meta">作成日: {{ project_item.created_at|date:"Y/n/j" }}</div></div>{% endfor %}{% else %}<p>プロジェクトはまだ作成されていません。Django管理画面から作成できます。</p>{% endif %}
+        </div>
+    </section>
+
+    <section class="task-list-container">
+        <div class="task-list-header"><h2><i class="fas fa-list-alt"></i> タスク一覧 (全プロジェクト)</h2><div class="task-filters"><div class="filter-dropdown" id="status-filter"><span>すべて</span> <i class="fas fa-chevron-down"></i></div><div class="filter-dropdown" id="sort-filter"><span>日付順</span> <i class="fas fa-chevron-down"></i></div><button class="add-task-btn" id="add-task-button"><i class="fas fa-plus"></i> 追加</button></div></div>
+        <div class="task-list" id="task-list">
+            {% for task in tasks %}<div class="task-item {% if task.status == 'completed' %}completed{% endif %}" data-task-id="{{ task.id }}"><div class="task-status-indicator {% if task.status == 'completed' %}completed{% endif %}" data-status="{{ task.status }}">{% if task.status == 'completed' %}<i class="fas fa-check"></i>{% endif %}</div><div class="task-details"><h3><a href="{% url 'helloworldapp:task_detail_view' task.id %}">{{ task.title }}</a></h3><p>{% if task.project %}{{ task.project.name }}{% else %}個人タスク{% endif %}</p></div><div class="task-meta">{% if task.status == 'completed' %}<span class="due-date completed-text">完了</span>{% elif task.due_date %}<span class="due-date">{{ task.due_date|date:"n月j日" }}</span>{% else %}<span class="due-date">期限なし</span>{% endif %}{% if task.assignee %}<div class="assigned-to" title="{{ task.assignee.username }}" style="background-color: #aabbcc; color: white; text-align: center; line-height: 24px; font-weight: bold; border-radius: 50%; width: 24px; height: 24px; font-size: 12px; display: inline-block;">{{ task.assignee.username.0|upper }}{{ task.assignee.username.1|upper|default:'' }}</div>{% endif %}</div></div>{% empty %}<div style="padding: 20px; text-align: center;"><p>現在表示できるタスクはありません。</p><p>右上の「追加」ボタンから新しいタスクを作成できます。</p></div>{% endfor %}
+        </div>
+    </section>
+{% endblock content %}
+
+{% block modals %}
+    <div class="modal" id="add-task-modal">
+        <div class="modal-content"><div class="modal-header"><h2>新規タスク追加</h2><span class="close-modal" id="close-task-modal">&times;</span></div><div class="modal-body"><form id="add-task-form" method="POST" action="{% url 'helloworldapp:main_page' %}">{% csrf_token %}{% if form.non_field_errors %}<div class="non-field-errors">{{ form.non_field_errors }}</div>{% endif %}{% for field in form %}<div class="form-group">{{ field.label_tag }}{{ field }}{% if field.help_text %}<small class="form-text text-muted">{{ field.help_text }}</small>{% endif %}{{ field.errors }}</div>{% endfor %}<div class="form-actions"><button type="button" class="cancel-btn" id="cancel-add-task">キャンセル</button><button type="submit" class="submit-btn">保存</button></div></form></div></div>
+    </div>
+    <div class="notification-panel" id="notification-panel">
+        <div class="notification-header"><h3>通知</h3> <span class="mark-all-read" id="mark-all-read">すべて既読にする</span></div>
+        <div class="notification-list"><div class="notification-item unread"><div class="notification-icon" style="background-color: #4caf50;"><i class="fas fa-check"></i></div><div class="notification-content"><p><strong>戸倉 悠偉</strong>がタスク「デザインレビュー」を完了しました</p><span class="notification-time">30分前</span></div></div></div>
+    </div>
+{% endblock modals %}
