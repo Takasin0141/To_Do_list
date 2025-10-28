@@ -4,52 +4,177 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{% block title %}TaskFlow{% endblock title %} - タスク管理アプリ</title>
+    <title>{% block title %}TaskFlow{% endblock title %} - プロフェッショナルタスク管理</title>
     
-    <link rel="stylesheet" href="{% static 'helloworldapp/css/styles.css' %}">
-    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
-
+    <!-- SEO Meta Tags -->
+    <meta name="description" content="TaskFlow - チームとプロジェクトを効率的に管理するプロフェッショナルなタスク管理プラットフォーム">
+    <meta name="keywords" content="タスク管理,プロジェクト管理,チーム管理,生産性向上">
+    <meta name="author" content="TaskFlow Team">
+    
+    <!-- Open Graph Meta Tags -->
+    <meta property="og:title" content="TaskFlow - プロフェッショナルタスク管理">
+    <meta property="og:description" content="チームとプロジェクトを効率的に管理するプロフェッショナルなタスク管理プラットフォーム">
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="{{ request.build_absolute_uri }}">
+    
+    <!-- Favicon -->
+    <link rel="icon" type="image/x-icon" href="{% static 'helloworldapp/images/favicon.ico' %}">
+    
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    
+    <!-- Stylesheets -->
+    <link rel="stylesheet" href="{% static 'helloworldapp/css/main.css' %}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
     {% block head_extra %}{% endblock head_extra %}
 </head>
 <body>
     <div class="app-container">
         <header class="header">
-            <div class="logo"><a href="{% url 'helloworldapp:main_page' %}" style="text-decoration: none; color: inherit;">TaskFlow</a></div>
-            <div class="search-bar"><i class="fas fa-search search-icon"></i><input type="text" placeholder="タスクを検索..." id="search-input"></div>
-            <div class="header-actions">
-                <div class="notification" id="notification-icon"><i class="fas fa-bell"></i></div>
-                <div class="user-profile" id="user-profile"><div class="avatar">{% if user.is_authenticated %}{{ user.username.0|upper }}{{ user.username.1|upper|default:'' }}{% else %}<i class="fas fa-user"></i>{% endif %}</div></div>
+            <div class="header-content">
+                <a href="{% url 'helloworldapp:main_page' %}" class="logo">
+                    <div class="logo-icon">
+                        <i class="fas fa-tasks"></i>
+                    </div>
+                    <span>TaskFlow</span>
+                </a>
+                
+                <div class="search-bar">
+                    <i class="fas fa-search search-icon"></i>
+                    <input type="text" class="search-input" placeholder="タスク、プロジェクト、チームを検索..." id="search-input">
+                </div>
+                
+                <div class="header-actions">
+                    <a href="{% url 'helloworldapp:app_settings_view' %}" class="notification-btn" title="設定">
+                        <i class="fas fa-bell"></i>
+                        <span class="notification-badge">3</span>
+                    </a>
+                    
+                    <a href="{% url 'helloworldapp:app_settings_view' %}" class="user-profile-btn" title="設定">
+                        {% if user.is_authenticated %}
+                            <div class="avatar">{{ user.username.0|upper }}{{ user.username.1|upper|default:'' }}</div>
+                        {% else %}
+                            <i class="fas fa-user"></i>
+                        {% endif %}
+                    </a>
+                </div>
             </div>
         </header>
 
         <div class="main-container">
             <aside class="sidebar">
-                <nav class="main-nav">
+                <div class="sidebar-header">
+                    <h2 class="sidebar-title">ナビゲーション</h2>
+                    <p class="sidebar-subtitle">効率的なタスク管理</p>
+                </div>
+                
+                <nav class="nav-menu">
                     <ul id="navigation-menu">
-                        <li {% if request.resolver_match.url_name == 'main_page' %}class="active"{% endif %} data-view="dashboard"><a href="{% url 'helloworldapp:main_page' %}"><i class="fas fa-chart-pie"></i>ダッシュボード</a></li>
+                        <li class="nav-item">
+                            <a href="{% url 'helloworldapp:main_page' %}" class="nav-link {% if request.resolver_match.url_name == 'main_page' %}active{% endif %}">
+                                <i class="fas fa-chart-pie nav-icon"></i>
+                                <span>ダッシュボード</span>
+                            </a>
+                        </li>
+                        
                         {% if user.is_authenticated %}
-                        <li {% if request.resolver_match.url_name == 'my_tasks_view' %}class="active"{% endif %} data-view="my-tasks"><a href="{% url 'helloworldapp:my_tasks_view' %}"><i class="fas fa-tasks"></i>マイタスク</a></li>
-                        <li {% if request.resolver_match.url_name == 'my_page_view' %}class="active"{% endif %} data-view="my-page"><a href="{% url 'helloworldapp:my_page_view' %}"><i class="fas fa-user-circle"></i>マイページ</a></li>
-                        <li {% if request.resolver_match.url_name == 'calendar_view' %}class="active"{% endif %} data-view="calendar"><a href="{% url 'helloworldapp:calendar_view' %}"><i class="fas fa-calendar"></i>カレンダー</a></li>
-                        <li {% if request.resolver_match.url_name == 'team_list_view' or request.resolver_match.url_name == 'team_detail_view' or request.resolver_match.url_name == 'manage_team_members_view' or request.resolver_match.url_name == 'team_edit_view' or request.resolver_match.url_name == 'team_delete_view' or request.resolver_match.url_name == 'leave_team_view' or request.resolver_match.url_name == 'team_dashboard_view' %}class="active"{% endif %} data-view="team"><a href="{% url 'helloworldapp:team_list_view' %}"><i class="fas fa-users"></i>チーム</a></li>
+                        <li class="nav-item">
+                            <a href="{% url 'helloworldapp:my_tasks_view' %}" class="nav-link {% if request.resolver_match.url_name == 'my_tasks_view' %}active{% endif %}">
+                                <i class="fas fa-tasks nav-icon"></i>
+                                <span>マイタスク</span>
+                            </a>
+                        </li>
+                        
+                        <li class="nav-item">
+                            <a href="{% url 'helloworldapp:my_page_view' %}" class="nav-link {% if request.resolver_match.url_name == 'my_page_view' %}active{% endif %}">
+                                <i class="fas fa-user-circle nav-icon"></i>
+                                <span>マイページ</span>
+                            </a>
+                        </li>
+                        
+                        <li class="nav-item">
+                            <a href="{% url 'helloworldapp:calendar_view' %}" class="nav-link {% if request.resolver_match.url_name == 'calendar_view' %}active{% endif %}">
+                                <i class="fas fa-calendar nav-icon"></i>
+                                <span>カレンダー</span>
+                            </a>
+                        </li>
+                        
+                        <li class="nav-item">
+                            <a href="{% url 'helloworldapp:team_list_view' %}" class="nav-link {% if request.resolver_match.url_name == 'team_list_view' or request.resolver_match.url_name == 'team_detail_view' or request.resolver_match.url_name == 'manage_team_members_view' or request.resolver_match.url_name == 'team_edit_view' or request.resolver_match.url_name == 'team_delete_view' or request.resolver_match.url_name == 'leave_team_view' or request.resolver_match.url_name == 'team_dashboard_view' %}active{% endif %}">
+                                <i class="fas fa-users nav-icon"></i>
+                                <span>チーム</span>
+                            </a>
+                        </li>
                         {% endif %}
-                        <li data-view="projects"><a href="#"><i class="fas fa-folder"></i>プロジェクト</a></li>
-                        <li data-view="reports"><a href="#"><i class="fas fa-chart-line"></i>レポート</a></li>
-                        <li {% if request.resolver_match.url_name == 'help_view' %}class="active"{% endif %} data-view="help"><a href="{% url 'helloworldapp:help_view' %}"><i class="fas fa-question-circle"></i>ヘルプ</a></li>
+                        
+                        <li class="nav-item">
+                            <a href="{% url 'helloworldapp:project_list_view' %}" class="nav-link {% if request.resolver_match.url_name == 'project_list_view' or request.resolver_match.url_name == 'project_detail_view' or request.resolver_match.url_name == 'project_create_view' or request.resolver_match.url_name == 'project_edit_view' or request.resolver_match.url_name == 'project_delete_view' or request.resolver_match.url_name == 'project_board_view' %}active{% endif %}">
+                                <i class="fas fa-folder nav-icon"></i>
+                                <span>プロジェクト</span>
+                            </a>
+                        </li>
+                        
+                        <li class="nav-item">
+                            <a href="{% url 'helloworldapp:report_view' %}" class="nav-link {% if request.resolver_match.url_name == 'report_view' %}active{% endif %}">
+                                <i class="fas fa-chart-line nav-icon"></i>
+                                <span>レポート</span>
+                            </a>
+                        </li>
+                        
+                        <li class="nav-item">
+                            <a href="{% url 'helloworldapp:help_view' %}" class="nav-link {% if request.resolver_match.url_name == 'help_view' %}active{% endif %}">
+                                <i class="fas fa-question-circle nav-icon"></i>
+                                <span>ヘルプ</span>
+                            </a>
+                        </li>
+                        
                         {% if user.is_authenticated %}
-                        <li {% if request.resolver_match.url_name == 'app_settings_view' %}class="active"{% endif %} data-view="settings"><a href="{% url 'helloworldapp:app_settings_view' %}"><i class="fas fa-cog"></i>アプリ設定</a></li>
+                        <li class="nav-item">
+                            <a href="{% url 'helloworldapp:app_settings_view' %}" class="nav-link {% if request.resolver_match.url_name == 'app_settings_view' %}active{% endif %}">
+                                <i class="fas fa-cog nav-icon"></i>
+                                <span>設定</span>
+                            </a>
+                        </li>
                         {% endif %}
                     </ul>
                 </nav>
-                <div class="team-members"><h3>チームメンバー</h3><ul><li><div class="member-avatar" style="background-color: #4caf50;">TK</div> <span class="member-name">戸倉 悠偉</span> <span class="status-indicator online"></span></li><li><div class="member-avatar" style="background-color: #ff9800;">YS</div> <span class="member-name">佐藤 朱音</span> <span class="status-indicator online"></span></li><li><div class="member-avatar" style="background-color: #9c27b0;">KM</div> <span class="member-name">新井 結</span> <span class="status-indicator away"></span></li></ul></div>
+                
+                {% if user.is_authenticated %}
+                <div class="team-members">
+                    <h3>チームメンバー</h3>
+                    <ul>
+                        {% if user_teams %}
+                            {% for team in user_teams %}
+                                {% for member in team.members.all %}
+                                    {% if member != user %}
+                                    <li>
+                                        <div class="member-avatar" style="background: linear-gradient(135deg, #4caf50, #45a049);">
+                                            {{ member.username.0|upper }}{{ member.username.1|upper|default:'' }}
+                                        </div>
+                                        <span class="member-name">{{ member.get_full_name|default:member.username }}</span>
+                                        <span class="member-team">{{ team.name }}</span>
+                                    </li>
+                                    {% endif %}
+                                {% endfor %}
+                            {% endfor %}
+                        {% else %}
+                            <li class="no-members">
+                                <span>チームメンバーがいません</span>
+                            </li>
+                        {% endif %}
+                    </ul>
+                </div>
+                {% endif %}
             </aside>
 
             <main class="content">
                 {% if messages %}
                     <ul class="messages">
                         {% for message in messages %}
-                            <li{% if message.tags %} class="message-item {{ message.tags }}"{% endif %}>
+                            <li class="message-item {{ message.tags }}">
                                 {% if message.level == DEFAULT_MESSAGE_LEVELS.ERROR %}<i class="fas fa-times-circle"></i>
                                 {% elif message.level == DEFAULT_MESSAGE_LEVELS.SUCCESS %}<i class="fas fa-check-circle"></i>
                                 {% elif message.level == DEFAULT_MESSAGE_LEVELS.INFO %}<i class="fas fa-info-circle"></i>
@@ -65,14 +190,157 @@
             </main>
         </div>
 
-        <div class="user-menu" id="user-menu" style="display: none;">
-            {% if user.is_authenticated %}<div class="user-menu-header"><div class="avatar">{{ user.username.0|upper }}{{ user.username.1|upper|default:'' }}</div><div class="user-info"><h3>{{ user.get_full_name|default:user.username }}</h3><p>{{ user.email|default:"メール未設定" }}</p></div></div><div class="user-menu-items"><a href="{% url 'helloworldapp:my_page_view' %}" class="user-menu-item" id="my-page-link"><i class="fas fa-user-cog"></i> マイページ</a><a href="{% url 'helloworldapp:password_change' %}" class="user-menu-item" id="password-change"><i class="fas fa-key"></i> パスワード変更</a><a href="{% url 'helloworldapp:app_settings_view' %}" class="user-menu-item" id="app-settings"><i class="fas fa-cog"></i> アプリ設定</a><a href="{% url 'helloworldapp:help_view' %}" class="user-menu-item" id="help-center"><i class="fas fa-question-circle"></i> ヘルプ</a><a href="{% url 'helloworldapp:logout_view' %}" class="user-menu-item logout" id="logout-button"><i class="fas fa-sign-out-alt"></i> ログアウト</a></div>{% else %}<div class="user-menu-items"><a href="{% url 'helloworldapp:login_view' %}" class="user-menu-item"><i class="fas fa-sign-in-alt"></i> ログイン</a><a href="{% url 'helloworldapp:signup_view' %}" class="user-menu-item"><i class="fas fa-user-plus"></i> 新規登録</a><a href="{% url 'helloworldapp:help_view' %}" class="user-menu-item" id="help-center-guest"><i class="fas fa-question-circle"></i> ヘルプ</a></div>{% endif %}
+        <!-- User Menu Dropdown -->
+        <div class="user-menu" id="user-menu">
+            {% if user.is_authenticated %}
+            <div class="user-menu-header">
+                <div class="avatar">{{ user.username.0|upper }}{{ user.username.1|upper|default:'' }}</div>
+                <div class="user-info">
+                    <h3>{{ user.get_full_name|default:user.username }}</h3>
+                    <p>{{ user.email|default:"メール未設定" }}</p>
+                </div>
+            </div>
+            <div class="user-menu-items">
+                <a href="{% url 'helloworldapp:my_page_view' %}" class="user-menu-item">
+                    <i class="fas fa-user-cog"></i> マイページ
+                </a>
+                <a href="{% url 'helloworldapp:password_change' %}" class="user-menu-item">
+                    <i class="fas fa-key"></i> パスワード変更
+                </a>
+                <a href="{% url 'helloworldapp:app_settings_view' %}" class="user-menu-item">
+                    <i class="fas fa-cog"></i> アプリ設定
+                </a>
+                <a href="{% url 'helloworldapp:help_view' %}" class="user-menu-item">
+                    <i class="fas fa-question-circle"></i> ヘルプ
+                </a>
+                <a href="{% url 'helloworldapp:logout_view' %}" class="user-menu-item logout">
+                    <i class="fas fa-sign-out-alt"></i> ログアウト
+                </a>
+            </div>
+            {% else %}
+            <div class="user-menu-items">
+                <a href="{% url 'helloworldapp:login_view' %}" class="user-menu-item">
+                    <i class="fas fa-sign-in-alt"></i> ログイン
+                </a>
+                <a href="{% url 'helloworldapp:signup_view' %}" class="user-menu-item">
+                    <i class="fas fa-user-plus"></i> 新規登録
+                </a>
+                <a href="{% url 'helloworldapp:help_view' %}" class="user-menu-item">
+                    <i class="fas fa-question-circle"></i> ヘルプ
+                </a>
+            </div>
+            {% endif %}
         </div>
-        <div class="overlay" id="overlay" style="display: none;"></div> 
+        
+        <!-- Notification Panel -->
+        <div class="notification-panel" id="notification-panel">
+            <div class="notification-header">
+                <h3>通知</h3>
+                <span class="mark-all-read" id="mark-all-read">すべて既読にする</span>
+            </div>
+            <div class="notification-list">
+                <div class="notification-item unread">
+                    <div class="notification-icon" style="background: linear-gradient(135deg, #4caf50, #45a049);">
+                        <i class="fas fa-check"></i>
+                    </div>
+                    <div class="notification-content">
+                        <p><strong>メンバーA</strong>がタスク「デザインレビュー」を完了しました</p>
+                        <span class="notification-time">30分前</span>
+                    </div>
+                </div>
+                <div class="notification-item">
+                    <div class="notification-icon" style="background: linear-gradient(135deg, #ff9800, #f57c00);">
+                        <i class="fas fa-exclamation"></i>
+                    </div>
+                    <div class="notification-content">
+                        <p>タスク「プロジェクト提案書」の期限が明日です</p>
+                        <span class="notification-time">2時間前</span>
+                    </div>
+                </div>
+                <div class="notification-item">
+                    <div class="notification-icon" style="background: linear-gradient(135deg, #9c27b0, #7b1fa2);">
+                        <i class="fas fa-user-plus"></i>
+                    </div>
+                    <div class="notification-content">
+                        <p>新しいメンバーがチームに参加しました</p>
+                        <span class="notification-time">1日前</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="overlay" id="overlay"></div>
         
         {% block modals %}{% endblock modals %}
-
-    </div><script src="{% static 'helloworldapp/js/script.js' %}"></script>
+    </div>
+    
+    <!-- Scripts -->
+    <script src="{% static 'helloworldapp/js/main.js' %}"></script>
     {% block scripts_extra %}{% endblock scripts_extra %}
+    
+    <style>
+        /* チームメンバー表示の改善 */
+        .team-members ul {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+        
+        .team-members li {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            padding: 0.5rem 0;
+            border-bottom: 1px solid var(--gray-200);
+        }
+        
+        .team-members li:last-child {
+            border-bottom: none;
+        }
+        
+        .member-avatar {
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 0.75rem;
+            font-weight: bold;
+            flex-shrink: 0;
+        }
+        
+        .member-name {
+            font-size: 0.875rem;
+            font-weight: 500;
+            color: var(--gray-900);
+            flex: 1;
+        }
+        
+        .member-team {
+            font-size: 0.75rem;
+            color: var(--gray-500);
+            background: var(--gray-100);
+            padding: 0.125rem 0.5rem;
+            border-radius: var(--radius-sm);
+        }
+        
+        .no-members {
+            color: var(--gray-500);
+            font-style: italic;
+            padding: 1rem 0;
+            text-align: center;
+        }
+        
+        .team-members h3 {
+            margin-bottom: 1rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            color: var(--gray-700);
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+    </style>
 </body>
 </html>

@@ -1,0 +1,72 @@
+{% extends 'helloworldapp/base.html' %}
+{% load static %}
+
+{% block content %}
+<div class="page-header">
+    <h1><i class="fas fa-folder-open"></i> {{ page_title|default:"プロジェクト一覧" }}</h1>
+    <div class="header-actions">
+        <a href="{% url 'helloworldapp:project_create_view' %}" class="btn-gradient">
+            <i class="fas fa-plus"></i> 新しいプロジェクトを作成
+        </a>
+    </div>
+</div>
+
+{% if messages %}
+<ul class="messages">
+    {% for message in messages %}
+    <li{% if message.tags %} class="{{ message.tags }}"{% endif %}>{{ message }}</li>
+    {% endfor %}
+</ul>
+{% endif %}
+
+<div class="project-list-container">
+    {% if projects %}
+        <div class="project-grid">
+            {% for project in projects %}
+            <div class="project-item-card animate-on-scroll">
+                <div class="project-header">
+                    <h3><a href="{% url 'helloworldapp:project_detail_view' project.id %}">{{ project.name }}</a></h3>
+                    <div class="project-actions">
+                        <a href="{% url 'helloworldapp:project_edit_view' project.id %}" class="btn-edit" title="編集">
+                            <i class="fas fa-edit"></i>
+                        </a>
+                        <a href="{% url 'helloworldapp:project_delete_view' project.id %}" class="btn-delete" title="削除">
+                            <i class="fas fa-trash"></i>
+                        </a>
+                    </div>
+                </div>
+                {% if project.description %}
+                    <p class="project-description">{{ project.description|truncatewords_html:20 }}</p>
+                {% else %}
+                    <p class="project-description no-description">説明なし</p>
+                {% endif %}
+                <div class="project-meta">
+                    <span class="created-date">
+                        <i class="fas fa-calendar-plus"></i> 作成日: {{ project.created_at|date:"Y年n月j日" }}
+                    </span>
+                    <span class="updated-date">
+                        <i class="fas fa-clock"></i> 更新: {{ project.updated_at|date:"n月j日" }}
+                    </span>
+                </div>
+                <div class="project-footer">
+                    <a href="{% url 'helloworldapp:project_board_view' project.id %}" class="btn-board">
+                        <i class="fas fa-columns"></i> ボード表示
+                    </a>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    {% else %}
+        <div class="empty-state">
+            <div class="empty-icon">
+                <i class="fas fa-folder-open"></i>
+            </div>
+            <h3>プロジェクトがありません</h3>
+            <p>最初のプロジェクトを作成して、タスク管理を始めましょう。</p>
+            <a href="{% url 'helloworldapp:project_create_view' %}" class="btn-gradient">
+                <i class="fas fa-plus"></i> プロジェクトを作成
+            </a>
+        </div>
+    {% endif %}
+</div>
+{% endblock %}

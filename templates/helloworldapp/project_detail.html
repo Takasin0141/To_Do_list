@@ -1,0 +1,98 @@
+{% extends 'helloworldapp/base.html' %}
+{% load static %}
+
+{% block content %}
+<div class="page-header">
+    <h1><i class="fas fa-folder-open"></i> {{ page_title|default:"プロジェクト詳細" }}</h1>
+    <div class="header-actions">
+        <a href="{% url 'helloworldapp:project_edit_view' project.id %}" class="btn-edit">
+            <i class="fas fa-edit"></i> 編集
+        </a>
+        <a href="{% url 'helloworldapp:project_board_view' project.id %}" class="btn-gradient">
+            <i class="fas fa-columns"></i> ボード表示
+        </a>
+    </div>
+</div>
+
+{% if messages %}
+<ul class="messages">
+    {% for message in messages %}
+    <li{% if message.tags %} class="{{ message.tags }}"{% endif %}>{{ message }}</li>
+    {% endfor %}
+</ul>
+{% endif %}
+
+<div class="project-detail-container">
+    <div class="project-info-card">
+        <div class="project-header">
+            <h2>{{ project.name }}</h2>
+            <div class="project-actions">
+                <a href="{% url 'helloworldapp:project_edit_view' project.id %}" class="btn-edit" title="編集">
+                    <i class="fas fa-edit"></i>
+                </a>
+                <a href="{% url 'helloworldapp:project_delete_view' project.id %}" class="btn-delete" title="削除">
+                    <i class="fas fa-trash"></i>
+                </a>
+            </div>
+        </div>
+        
+        {% if project.description %}
+        <div class="project-description">
+            <h3><i class="fas fa-align-left"></i> 説明</h3>
+            <p>{{ project.description|linebreaks }}</p>
+        </div>
+        {% endif %}
+        
+        <div class="project-meta">
+            <div class="meta-item">
+                <i class="fas fa-calendar-plus"></i>
+                <span>作成日: {{ project.created_at|date:"Y年n月j日 H:i" }}</span>
+            </div>
+            <div class="meta-item">
+                <i class="fas fa-clock"></i>
+                <span>更新日: {{ project.updated_at|date:"Y年n月j日 H:i" }}</span>
+            </div>
+        </div>
+    </div>
+    
+    <div class="project-tasks-section">
+        <h3><i class="fas fa-tasks"></i> 関連タスク</h3>
+        {% if project_tasks %}
+            <div class="task-list">
+                {% for task in project_tasks %}
+                <div class="task-item {% if task.status == 'completed' %}completed{% endif %}">
+                    <div class="task-status-indicator {% if task.status == 'completed' %}completed{% endif %}" data-status="{{ task.status }}">
+                        {% if task.status == 'completed' %}<i class="fas fa-check"></i>{% endif %}
+                    </div>
+                    <div class="task-details">
+                        <h4><a href="{% url 'helloworldapp:task_detail_view' task.id %}">{{ task.title }}</a></h4>
+                        <div class="task-meta">
+                            <span class="task-status">{{ task.get_status_display }}</span>
+                            <span class="task-priority">優先度: {{ task.get_priority_display }}</span>
+                            {% if task.assignee %}
+                            <span class="task-assignee">
+                                <i class="fas fa-user"></i> {{ task.assignee.username }}
+                            </span>
+                            {% endif %}
+                            {% if task.due_date %}
+                            <span class="task-due-date">
+                                <i class="fas fa-calendar"></i> {{ task.due_date|date:"n月j日" }}
+                            </span>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        {% else %}
+            <div class="empty-state">
+                <div class="empty-icon">
+                    <i class="fas fa-tasks"></i>
+                </div>
+                <h4>タスクがありません</h4>
+                <p>このプロジェクトにはまだタスクがありません。</p>
+            </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

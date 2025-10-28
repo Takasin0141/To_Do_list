@@ -4,15 +4,452 @@
 {% block title %}{{ page_title|default:"マイタスク" }} - TaskFlow{% endblock title %}
 
 {% block head_extra %}
-    {# my_tasks.html 固有のスタイルがあればここに追加 (現在は styles.css にある想定) #}
-    {# 以前このファイルにあった <style> タグの内容は styles.css に移動済みとします #}
     <style>
-        /* my_tasks.html に特化したスタイルがあればここに記述 */
-        /* 例: .task-section + .task-section { margin-top: 30px; } は styles.css に移動済み */
-        .page-header h1 { /* このページ専用のタイトルスタイル調整など */
-             margin-top: 0;
-             margin-bottom: 25px;
-             font-size: 1.8em;
+    /* マイタスクページ専用スタイル */
+    .page-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 2rem;
+    }
+
+    .page-actions {
+        display: flex;
+        gap: 1rem;
+    }
+
+    .task-stats {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+        gap: 1rem;
+        margin-bottom: 2rem;
+        padding: 1.5rem;
+        background: var(--white);
+        border: 1px solid var(--gray-200);
+        border-radius: var(--radius-xl);
+    }
+
+    .stat-item {
+        text-align: center;
+    }
+
+    .stat-number {
+        font-size: 2rem;
+        font-weight: var(--font-weight-bold);
+        color: var(--primary-600);
+        margin-bottom: 0.5rem;
+    }
+
+    .stat-label {
+        font-size: 0.875rem;
+        color: var(--gray-600);
+        font-weight: var(--font-weight-medium);
+    }
+
+    .task-filters {
+        display: flex;
+        gap: 1.5rem;
+        margin-bottom: 2rem;
+        padding: 1.5rem;
+        background: var(--gray-50);
+        border-radius: var(--radius-xl);
+        flex-wrap: wrap;
+    }
+
+    .filter-group {
+        display: flex;
+        flex-direction: column;
+        gap: 0.5rem;
+        min-width: 150px;
+    }
+
+    .filter-group label {
+        font-size: 0.875rem;
+        font-weight: var(--font-weight-medium);
+        color: var(--gray-700);
+    }
+
+    .filter-select {
+        padding: 0.5rem;
+        border: 1px solid var(--gray-300);
+        border-radius: var(--radius-md);
+        background: var(--white);
+        font-size: 0.875rem;
+    }
+
+    .task-list-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 1rem;
+    }
+
+    .task-count {
+        background: var(--primary-100);
+        color: var(--primary-700);
+        padding: 0.25rem 0.75rem;
+        border-radius: var(--radius-full);
+        font-size: 0.875rem;
+        font-weight: var(--font-weight-medium);
+    }
+
+    .task-item {
+        display: flex;
+        align-items: flex-start;
+        gap: 1rem;
+        padding: 1.5rem;
+        background: var(--white);
+        border: 1px solid var(--gray-200);
+        border-radius: var(--radius-xl);
+        margin-bottom: 1rem;
+        transition: all var(--transition-base);
+    }
+
+    .task-item:hover {
+        border-color: var(--primary-300);
+        box-shadow: var(--shadow-md);
+        transform: translateY(-2px);
+    }
+
+    .task-status-indicator {
+        width: 40px;
+        height: 40px;
+        border-radius: var(--radius-full);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: var(--white);
+        font-size: 1rem;
+        flex-shrink: 0;
+    }
+
+    .status-pending {
+        background: linear-gradient(135deg, #6b7280, #4b5563);
+    }
+
+    .status-in_progress {
+        background: linear-gradient(135deg, #3b82f6, #2563eb);
+    }
+
+    .status-on_hold {
+        background: linear-gradient(135deg, #f59e0b, #d97706);
+    }
+
+    .status-completed {
+        background: linear-gradient(135deg, #10b981, #059669);
+    }
+
+    .task-details {
+        flex: 1;
+    }
+
+    .task-details h3 {
+        margin: 0 0 0.5rem 0;
+        font-size: 1.125rem;
+        font-weight: var(--font-weight-semibold);
+    }
+
+    .task-details h3 a {
+        color: var(--gray-900);
+        text-decoration: none;
+        transition: color var(--transition-fast);
+    }
+
+    .task-details h3 a:hover {
+        color: var(--primary-600);
+    }
+
+    .task-project {
+        margin: 0 0 0.5rem 0;
+        font-size: 0.875rem;
+        color: var(--gray-600);
+    }
+
+    .task-description {
+        margin: 0;
+        font-size: 0.875rem;
+        color: var(--gray-600);
+        line-height: 1.5;
+    }
+
+    .task-meta {
+        display: flex;
+        flex-direction: column;
+        gap: 0.5rem;
+        align-items: flex-end;
+        min-width: 150px;
+    }
+
+    .task-priority {
+        display: flex;
+        align-items: center;
+        gap: 0.25rem;
+        font-size: 0.75rem;
+        font-weight: var(--font-weight-medium);
+        padding: 0.25rem 0.5rem;
+        border-radius: var(--radius-sm);
+    }
+
+    .priority-high {
+        background: var(--red-100);
+        color: var(--red-700);
+    }
+
+    .priority-medium {
+        background: var(--yellow-100);
+        color: var(--yellow-700);
+    }
+
+    .priority-low {
+        background: var(--green-100);
+        color: var(--green-700);
+    }
+
+    .task-due-date {
+        display: flex;
+        align-items: center;
+        gap: 0.25rem;
+        font-size: 0.875rem;
+        color: var(--gray-600);
+    }
+
+    .overdue {
+        color: var(--red-600);
+        font-weight: var(--font-weight-medium);
+    }
+
+    .task-actions {
+        display: flex;
+        gap: 0.5rem;
+    }
+
+    .btn-sm {
+        padding: 0.375rem 0.75rem;
+        font-size: 0.75rem;
+    }
+
+    .empty-state {
+        text-align: center;
+        padding: 3rem 1rem;
+        color: var(--gray-500);
+    }
+
+    .empty-icon {
+        font-size: 3rem;
+        margin-bottom: 1rem;
+        opacity: 0.5;
+    }
+
+    .empty-state h3 {
+        margin: 0 0 0.5rem 0;
+        font-size: 1.25rem;
+        color: var(--gray-600);
+    }
+
+    .empty-state p {
+        margin: 0 0 1.5rem 0;
+    }
+
+    /* 表示切り替えボタン */
+    .view-toggle {
+        display: flex;
+        gap: 0.5rem;
+        margin-bottom: 1.5rem;
+    }
+
+    .view-btn {
+        padding: 0.5rem 1rem;
+        border: 1px solid var(--gray-300);
+        background: var(--white);
+        color: var(--gray-600);
+        border-radius: var(--radius-md);
+        cursor: pointer;
+        transition: all var(--transition-fast);
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+
+    .view-btn:hover {
+        background: var(--gray-50);
+        border-color: var(--gray-400);
+    }
+
+    .view-btn.active {
+        background: var(--primary-600);
+        color: var(--white);
+        border-color: var(--primary-600);
+    }
+
+    /* カンバンボード */
+    .kanban-board {
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        gap: 1.5rem;
+        margin-bottom: 2rem;
+    }
+
+    .kanban-column {
+        background: var(--gray-50);
+        border-radius: var(--radius-xl);
+        padding: 1rem;
+        min-height: 500px;
+    }
+
+    .kanban-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 1rem;
+        padding-bottom: 0.5rem;
+        border-bottom: 2px solid var(--gray-200);
+    }
+
+    .kanban-header h3 {
+        margin: 0;
+        font-size: 1rem;
+        font-weight: var(--font-weight-semibold);
+        color: var(--gray-700);
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+
+    .column-count {
+        background: var(--primary-100);
+        color: var(--primary-700);
+        padding: 0.25rem 0.5rem;
+        border-radius: var(--radius-full);
+        font-size: 0.75rem;
+        font-weight: var(--font-weight-medium);
+    }
+
+    .kanban-tasks {
+        min-height: 400px;
+        display: flex;
+        flex-direction: column;
+        gap: 0.75rem;
+    }
+
+    .kanban-task {
+        background: var(--white);
+        border: 1px solid var(--gray-200);
+        border-radius: var(--radius-lg);
+        padding: 1rem;
+        cursor: grab;
+        transition: all var(--transition-base);
+        box-shadow: var(--shadow-sm);
+    }
+
+    .kanban-task:hover {
+        box-shadow: var(--shadow-md);
+        transform: translateY(-1px);
+    }
+
+    .kanban-task:active {
+        cursor: grabbing;
+    }
+
+    .kanban-task.dragging {
+        opacity: 0.5;
+        transform: rotate(5deg);
+    }
+
+    .kanban-task h4 {
+        margin: 0 0 0.5rem 0;
+        font-size: 0.875rem;
+        font-weight: var(--font-weight-semibold);
+        color: var(--gray-900);
+    }
+
+    .kanban-task h4 a {
+        color: inherit;
+        text-decoration: none;
+    }
+
+    .kanban-task h4 a:hover {
+        color: var(--primary-600);
+    }
+
+    .kanban-task .task-project {
+        margin: 0 0 0.5rem 0;
+        font-size: 0.75rem;
+        color: var(--gray-600);
+    }
+
+    .kanban-task .task-priority {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.25rem;
+        font-size: 0.625rem;
+        font-weight: var(--font-weight-medium);
+        padding: 0.125rem 0.375rem;
+        border-radius: var(--radius-sm);
+        margin-bottom: 0.5rem;
+    }
+
+    .kanban-task .task-due-date {
+        font-size: 0.75rem;
+        color: var(--gray-600);
+        display: flex;
+        align-items: center;
+        gap: 0.25rem;
+    }
+
+    .kanban-task .overdue {
+        color: var(--red-600);
+        font-weight: var(--font-weight-medium);
+    }
+
+    /* ドロップゾーンのハイライト */
+    .kanban-column.drag-over {
+        background: var(--primary-50);
+        border: 2px dashed var(--primary-300);
+    }
+
+    .kanban-tasks.drag-over {
+        background: var(--primary-100);
+        border-radius: var(--radius-md);
+        min-height: 50px;
+    }
+
+    /* レスポンシブ対応 */
+    @media (max-width: 768px) {
+        .page-header {
+            flex-direction: column;
+            align-items: flex-start;
+            gap: 1rem;
+        }
+
+        .task-filters {
+            flex-direction: column;
+        }
+
+        .filter-group {
+            min-width: auto;
+        }
+
+        .task-item {
+            flex-direction: column;
+        }
+
+        .task-meta {
+            align-items: flex-start;
+            min-width: auto;
+        }
+
+        .kanban-board {
+            grid-template-columns: 1fr;
+            gap: 1rem;
+        }
+
+        .kanban-column {
+            min-height: 300px;
+        }
+
+        .kanban-tasks {
+            min-height: 200px;
+        }
         }
     </style>
 {% endblock head_extra %}
@@ -20,50 +457,139 @@
 {% block content %}
     <div class="page-header">
         <h1><i class="fas fa-tasks"></i> {{ page_title|default:"マイタスク" }}</h1>
+        <div class="page-actions">
+            <button class="btn btn-primary" id="add-task-button">
+                <i class="fas fa-plus"></i> 新しいタスクを追加
+            </button>
+        </div>
     </div>
 
-    {# Djangoメッセージフレームワークからのメッセージを表示 (base.htmlで共通化済みなので不要な場合もある) #}
-    {# {% if messages %}
-        <ul class="messages">
-            {% for message in messages %}
-                <li{% if message.tags %} class="message-item {{ message.tags }}"{% endif %}>
-                    {% if message.level == DEFAULT_MESSAGE_LEVELS.ERROR %}<i class="fas fa-times-circle"></i>
-                    {% elif message.level == DEFAULT_MESSAGE_LEVELS.SUCCESS %}<i class="fas fa-check-circle"></i>
-                    {% elif message.level == DEFAULT_MESSAGE_LEVELS.INFO %}<i class="fas fa-info-circle"></i>
-                    {% elif message.level == DEFAULT_MESSAGE_LEVELS.WARNING %}<i class="fas fa-exclamation-triangle"></i>
-                    {% endif %}
-                    {{ message }}
-                </li>
-            {% endfor %}
-        </ul>
-    {% endif %} #}
+    <!-- タスク統計 -->
+    <div class="task-stats">
+        <div class="stat-item">
+            <div class="stat-number">{{ user_tasks|length }}</div>
+            <div class="stat-label">進行中</div>
+        </div>
+        <div class="stat-item">
+            <div class="stat-number">{{ completed_user_tasks|length }}</div>
+            <div class="stat-label">完了済み</div>
+        </div>
+        <div class="stat-item">
+            <div class="stat-number">{{ user_tasks|length|add:completed_user_tasks|length }}</div>
+            <div class="stat-label">合計</div>
+        </div>
+    </div>
 
+    <!-- 表示切り替えボタン -->
+    <div class="view-toggle">
+        <button class="view-btn active" id="list-view-btn">
+            <i class="fas fa-list"></i> リスト表示
+        </button>
+        <button class="view-btn" id="kanban-view-btn">
+            <i class="fas fa-columns"></i> カンバン表示
+        </button>
+    </div>
+
+    <!-- フィルター -->
+    <div class="task-filters">
+        <div class="filter-group">
+            <label for="status-filter">ステータス:</label>
+            <select id="status-filter" class="filter-select">
+                <option value="all">すべて</option>
+                <option value="pending">未着手</option>
+                <option value="in_progress">進行中</option>
+                <option value="on_hold">保留</option>
+                <option value="completed">完了</option>
+            </select>
+        </div>
+        <div class="filter-group">
+            <label for="priority-filter">優先度:</label>
+            <select id="priority-filter" class="filter-select">
+                <option value="all">すべて</option>
+                <option value="high">高</option>
+                <option value="medium">中</option>
+                <option value="low">低</option>
+            </select>
+        </div>
+        <div class="filter-group">
+            <label for="project-filter">プロジェクト:</label>
+            <select id="project-filter" class="filter-select">
+                <option value="all">すべて</option>
+                <option value="personal">個人タスク</option>
+                <!-- プロジェクトオプションは動的に追加 -->
+            </select>
+        </div>
+    </div>
+
+    <!-- リスト表示 -->
+    <div id="list-view">
     <section class="task-list-container task-section">
         <div class="task-list-header">
-            <h2>進行中のタスク</h2>
+                <h2><i class="fas fa-play-circle"></i> 進行中のタスク</h2>
+                <span class="task-count">{{ user_tasks|length }}件</span>
         </div>
         <div class="task-list" id="my-active-tasks-list">
             {% for task in user_tasks %}
-            <div class="task-item" data-task-id="{{ task.id }}">
-                <div class="task-status-indicator" data-status="{{ task.status }}">
-                    {# ステータスに応じてアイコンや色を変える場合はここにロジック #}
+            <div class="task-item" data-task-id="{{ task.id }}" data-status="{{ task.status }}" data-priority="{{ task.priority }}">
+                <div class="task-status-indicator status-{{ task.status }}" data-status="{{ task.status }}">
+                    {% if task.status == 'pending' %}
+                        <i class="fas fa-clock"></i>
+                    {% elif task.status == 'in_progress' %}
+                        <i class="fas fa-play"></i>
+                    {% elif task.status == 'on_hold' %}
+                        <i class="fas fa-pause"></i>
+                    {% endif %}
                 </div>
                 <div class="task-details">
-                    <h3><a href="{% url 'helloworldapp:task_detail_view' task.id %}">{{ task.title }}</a></h3> {# ★★★ タスク詳細へのリンク ★★★ #}
-                    <p>{% if task.project %}{{ task.project.name }}{% else %}個人タスク{% endif %}</p>
+                    <h3><a href="{% url 'helloworldapp:task_detail_view' task.id %}">{{ task.title }}</a></h3>
+                    <p class="task-project">
+                        {% if task.project %}
+                            <i class="fas fa-folder"></i> {{ task.project.name }}
+                        {% else %}
+                            <i class="fas fa-user"></i> 個人タスク
+                        {% endif %}
+                    </p>
+                    {% if task.description %}
+                        <p class="task-description">{{ task.description|truncatewords:20 }}</p>
+                    {% endif %}
                 </div>
                 <div class="task-meta">
+                    <div class="task-priority priority-{{ task.priority }}">
+                        {% if task.priority == 'high' %}
+                            <i class="fas fa-exclamation-triangle"></i> 高
+                        {% elif task.priority == 'medium' %}
+                            <i class="fas fa-minus"></i> 中
+                        {% elif task.priority == 'low' %}
+                            <i class="fas fa-arrow-down"></i> 低
+                        {% endif %}
+                    </div>
+                    <div class="task-due-date">
                     {% if task.due_date %}
-                        <span class="due-date">{{ task.due_date|date:"n月j日" }}</span>
+                            <i class="fas fa-calendar"></i> {{ task.due_date|date:"n月j日" }}
+                            {% if task.due_date < today %}
+                                <span class="overdue">期限切れ</span>
+                            {% endif %}
                     {% else %}
-                        <span class="due-date">期限なし</span>
+                            <i class="fas fa-calendar-times"></i> 期限なし
                     {% endif %}
-                    {# このページでは担当者は自分なので、アバター表示は省略または固定でも可 #}
+                    </div>
+                    <div class="task-actions">
+                        <a href="{% url 'helloworldapp:task_edit_view' task.id %}" class="btn btn-sm btn-secondary" title="編集">
+                            <i class="fas fa-edit"></i>
+                        </a>
+                    </div>
                 </div>
             </div>
             {% empty %}
-            <div style="padding: 20px; text-align: center;">
-                <p>進行中のタスクはありません。</p>
+            <div class="empty-state">
+                <div class="empty-icon">
+                    <i class="fas fa-tasks"></i>
+                </div>
+                <h3>進行中のタスクはありません</h3>
+                <p>新しいタスクを作成して、作業を開始しましょう。</p>
+                <button class="btn btn-primary" id="add-task-button-empty">
+                    <i class="fas fa-plus"></i> 最初のタスクを作成
+                </button>
             </div>
             {% endfor %}
         </div>
@@ -71,35 +597,469 @@
 
     <section class="task-list-container task-section">
         <div class="task-list-header">
-            <h2>完了済みのタスク</h2>
+            <h2><i class="fas fa-check-circle"></i> 完了済みのタスク</h2>
+            <span class="task-count">{{ completed_user_tasks|length }}件</span>
         </div>
         <div class="task-list" id="my-completed-tasks-list">
             {% for task in completed_user_tasks %}
-            <div class="task-item completed" data-task-id="{{ task.id }}">
+            <div class="task-item completed" data-task-id="{{ task.id }}" data-status="{{ task.status }}" data-priority="{{ task.priority }}">
                 <div class="task-status-indicator completed" data-status="{{ task.status }}">
                     <i class="fas fa-check"></i>
                 </div>
                 <div class="task-details">
-                    <h3><a href="{% url 'helloworldapp:task_detail_view' task.id %}">{{ task.title }}</a></h3> {# ★★★ タスク詳細へのリンク ★★★ #}
-                    <p>{% if task.project %}{{ task.project.name }}{% else %}個人タスク{% endif %}</p>
+                    <h3><a href="{% url 'helloworldapp:task_detail_view' task.id %}">{{ task.title }}</a></h3>
+                    <p class="task-project">
+                        {% if task.project %}
+                            <i class="fas fa-folder"></i> {{ task.project.name }}
+                        {% else %}
+                            <i class="fas fa-user"></i> 個人タスク
+                        {% endif %}
+                    </p>
                 </div>
                 <div class="task-meta">
-                    <span class="due-date completed-text">完了 ({{ task.updated_at|date:"n月j日" }})</span>
+                    <div class="task-completion">
+                        <i class="fas fa-check-circle"></i> 完了 ({{ task.updated_at|date:"n月j日" }})
+                    </div>
                 </div>
             </div>
             {% empty %}
-            <div style="padding: 20px; text-align: center;">
-                <p>完了済みのタスクはありません。</p>
+            <div class="empty-state">
+                <div class="empty-icon">
+                    <i class="fas fa-check-circle"></i>
+                </div>
+                <h3>完了済みのタスクはありません</h3>
+                <p>タスクを完了すると、ここに表示されます。</p>
             </div>
             {% endfor %}
         </div>
     </section>
+    </div>
+
+    <!-- カンバン表示 -->
+    <div id="kanban-view" style="display: none;">
+        <div class="kanban-board">
+            <div class="kanban-column" data-status="pending">
+                <div class="kanban-header">
+                    <h3><i class="fas fa-clock"></i> 未着手</h3>
+                    <span class="column-count">0</span>
+                </div>
+                <div class="kanban-tasks" id="pending-tasks">
+                    <!-- タスクはJavaScriptで動的に追加 -->
+                </div>
+            </div>
+            
+            <div class="kanban-column" data-status="in_progress">
+                <div class="kanban-header">
+                    <h3><i class="fas fa-play"></i> 進行中</h3>
+                    <span class="column-count">0</span>
+                </div>
+                <div class="kanban-tasks" id="in_progress-tasks">
+                    <!-- タスクはJavaScriptで動的に追加 -->
+                </div>
+            </div>
+            
+            <div class="kanban-column" data-status="on_hold">
+                <div class="kanban-header">
+                    <h3><i class="fas fa-pause"></i> 保留</h3>
+                    <span class="column-count">0</span>
+                </div>
+                <div class="kanban-tasks" id="on_hold-tasks">
+                    <!-- タスクはJavaScriptで動的に追加 -->
+                </div>
+            </div>
+            
+            <div class="kanban-column" data-status="completed">
+                <div class="kanban-header">
+                    <h3><i class="fas fa-check"></i> 完了</h3>
+                    <span class="column-count">0</span>
+                </div>
+                <div class="kanban-tasks" id="completed-tasks">
+                    <!-- タスクはJavaScriptで動的に追加 -->
+                </div>
+            </div>
+        </div>
+    </div>
 {% endblock content %}
 
 {% block modals %}
-    {# このページに固有のモーダルがあればここに追加 #}
+    <!-- Add Task Modal -->
+    <div class="modal" id="add-task-modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 class="modal-title">新規タスク追加</h2>
+                <button class="close-modal" id="close-task-modal">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div class="modal-body">
+                <form id="add-task-form" method="POST" action="{% url 'helloworldapp:my_tasks_view' %}">
+                    {% csrf_token %}
+                    <div class="form-group">
+                        <label for="title" class="form-label">タスク名 <span class="required">*</span></label>
+                        <input type="text" id="title" name="title" class="form-control" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="description" class="form-label">説明</label>
+                        <textarea id="description" name="description" class="form-control" rows="3"></textarea>
+                    </div>
+                    <div class="form-group">
+                        <label for="priority" class="form-label">優先度</label>
+                        <select id="priority" name="priority" class="form-control">
+                            <option value="low">低</option>
+                            <option value="medium" selected>中</option>
+                            <option value="high">高</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="due_date" class="form-label">期限</label>
+                        <input type="date" id="due_date" name="due_date" class="form-control">
+                    </div>
+                    <div class="form-group">
+                        <label for="project" class="form-label">プロジェクト</label>
+                        <select id="project" name="project" class="form-control">
+                            <option value="">個人タスク</option>
+                            <!-- プロジェクトオプションは動的に追加 -->
+                        </select>
+                    </div>
+                    <div class="form-actions">
+                        <button type="button" class="btn btn-secondary" id="cancel-add-task">
+                            <i class="fas fa-times"></i> キャンセル
+                        </button>
+                        <button type="submit" class="btn btn-primary">
+                            <i class="fas fa-save"></i> 保存
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
 {% endblock modals %}
 
 {% block scripts_extra %}
-    {# このページ固有のJavaScriptがあればここに追加 #}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // タスク追加モーダル
+    const addTaskButton = document.getElementById('add-task-button');
+    const addTaskButtonEmpty = document.getElementById('add-task-button-empty');
+    const addTaskModal = document.getElementById('add-task-modal');
+    const closeTaskModal = document.getElementById('close-task-modal');
+    const cancelAddTask = document.getElementById('cancel-add-task');
+
+    function openModal() {
+        addTaskModal.style.display = 'block';
+        document.body.style.overflow = 'hidden';
+    }
+
+    function closeModal() {
+        addTaskModal.style.display = 'none';
+        document.body.style.overflow = 'auto';
+    }
+
+    if (addTaskButton) addTaskButton.addEventListener('click', openModal);
+    if (addTaskButtonEmpty) addTaskButtonEmpty.addEventListener('click', openModal);
+    if (closeTaskModal) closeTaskModal.addEventListener('click', closeModal);
+    if (cancelAddTask) cancelAddTask.addEventListener('click', closeModal);
+
+    // モーダル外クリックで閉じる
+    addTaskModal.addEventListener('click', function(e) {
+        if (e.target === addTaskModal) {
+            closeModal();
+        }
+    });
+
+    // フィルタリング機能
+    const statusFilter = document.getElementById('status-filter');
+    const priorityFilter = document.getElementById('priority-filter');
+    const projectFilter = document.getElementById('project-filter');
+
+    function filterTasks() {
+        const statusValue = statusFilter.value;
+        const priorityValue = priorityFilter.value;
+        const projectValue = projectFilter.value;
+
+        const activeTasks = document.querySelectorAll('#my-active-tasks-list .task-item');
+        const completedTasks = document.querySelectorAll('#my-completed-tasks-list .task-item');
+
+        function filterTaskList(taskList) {
+            taskList.forEach(task => {
+                const taskStatus = task.dataset.status;
+                const taskPriority = task.dataset.priority;
+                const taskProject = task.querySelector('.task-project');
+                const isPersonal = taskProject && taskProject.textContent.includes('個人タスク');
+
+                let showTask = true;
+
+                if (statusValue !== 'all' && taskStatus !== statusValue) {
+                    showTask = false;
+                }
+
+                if (priorityValue !== 'all' && taskPriority !== priorityValue) {
+                    showTask = false;
+                }
+
+                if (projectValue === 'personal' && !isPersonal) {
+                    showTask = false;
+                } else if (projectValue !== 'all' && projectValue !== 'personal' && isPersonal) {
+                    showTask = false;
+                }
+
+                task.style.display = showTask ? 'flex' : 'none';
+            });
+        }
+
+        filterTaskList(activeTasks);
+        filterTaskList(completedTasks);
+    }
+
+    if (statusFilter) statusFilter.addEventListener('change', filterTasks);
+    if (priorityFilter) priorityFilter.addEventListener('change', filterTasks);
+    if (projectFilter) projectFilter.addEventListener('change', filterTasks);
+
+    // 初期フィルタリング
+    filterTasks();
+
+    // 表示切り替え機能
+    const listViewBtn = document.getElementById('list-view-btn');
+    const kanbanViewBtn = document.getElementById('kanban-view-btn');
+    const listView = document.getElementById('list-view');
+    const kanbanView = document.getElementById('kanban-view');
+
+    function switchToListView() {
+        listViewBtn.classList.add('active');
+        kanbanViewBtn.classList.remove('active');
+        listView.style.display = 'block';
+        kanbanView.style.display = 'none';
+    }
+
+    function switchToKanbanView() {
+        listViewBtn.classList.remove('active');
+        kanbanViewBtn.classList.add('active');
+        listView.style.display = 'none';
+        kanbanView.style.display = 'block';
+        populateKanbanBoard();
+    }
+
+    if (listViewBtn) listViewBtn.addEventListener('click', switchToListView);
+    if (kanbanViewBtn) kanbanViewBtn.addEventListener('click', switchToKanbanView);
+
+    // カンバンボードにタスクを配置
+    function populateKanbanBoard() {
+        const allTasks = [...document.querySelectorAll('.task-item')];
+        const kanbanColumns = {
+            'pending': document.getElementById('pending-tasks'),
+            'in_progress': document.getElementById('in_progress-tasks'),
+            'on_hold': document.getElementById('on_hold-tasks'),
+            'completed': document.getElementById('completed-tasks')
+        };
+
+        // 既存のタスクをクリア
+        Object.values(kanbanColumns).forEach(column => {
+            column.innerHTML = '';
+        });
+
+        // タスクをカンバンカードに変換して配置
+        allTasks.forEach(taskElement => {
+            const taskId = taskElement.dataset.taskId;
+            const status = taskElement.dataset.status;
+            const priority = taskElement.dataset.priority;
+            
+            const title = taskElement.querySelector('h3 a').textContent;
+            const project = taskElement.querySelector('.task-project').textContent.trim();
+            const dueDate = taskElement.querySelector('.task-due-date');
+            const dueDateText = dueDate ? dueDate.textContent.trim() : '';
+            const isOverdue = dueDate && dueDate.querySelector('.overdue');
+
+            const kanbanCard = createKanbanCard(taskId, title, project, priority, dueDateText, isOverdue);
+            
+            if (kanbanColumns[status]) {
+                kanbanColumns[status].appendChild(kanbanCard);
+            }
+        });
+
+        // カウントを更新
+        updateColumnCounts();
+    }
+
+    function createKanbanCard(taskId, title, project, priority, dueDate, isOverdue) {
+        const card = document.createElement('div');
+        card.className = 'kanban-task';
+        card.draggable = true;
+        card.dataset.taskId = taskId;
+        card.dataset.priority = priority;
+
+        const priorityClass = `priority-${priority}`;
+        const priorityText = priority === 'high' ? '高' : priority === 'medium' ? '中' : '低';
+        const priorityIcon = priority === 'high' ? 'fas fa-exclamation-triangle' : 
+                           priority === 'medium' ? 'fas fa-minus' : 'fas fa-arrow-down';
+
+        card.innerHTML = `
+            <h4><a href="{% url 'helloworldapp:task_detail_view' 0 %}".replace('0', taskId)>${title}</a></h4>
+            <p class="task-project">${project}</p>
+            <div class="task-priority ${priorityClass}">
+                <i class="${priorityIcon}"></i> ${priorityText}
+            </div>
+            <div class="task-due-date">
+                <i class="fas fa-calendar"></i> ${dueDate}
+                ${isOverdue ? '<span class="overdue">期限切れ</span>' : ''}
+            </div>
+        `;
+
+        return card;
+    }
+
+    function updateColumnCounts() {
+        const columns = document.querySelectorAll('.kanban-column');
+        columns.forEach(column => {
+            const count = column.querySelector('.kanban-tasks').children.length;
+            column.querySelector('.column-count').textContent = count;
+        });
+    }
+
+    // ドラッグアンドドロップ機能
+    let draggedElement = null;
+
+    function setupDragAndDrop() {
+        const kanbanTasks = document.querySelectorAll('.kanban-task');
+        const kanbanColumns = document.querySelectorAll('.kanban-column');
+
+        kanbanTasks.forEach(task => {
+            task.addEventListener('dragstart', handleDragStart);
+            task.addEventListener('dragend', handleDragEnd);
+        });
+
+        kanbanColumns.forEach(column => {
+            column.addEventListener('dragover', handleDragOver);
+            column.addEventListener('drop', handleDrop);
+            column.addEventListener('dragenter', handleDragEnter);
+            column.addEventListener('dragleave', handleDragLeave);
+        });
+    }
+
+    function handleDragStart(e) {
+        draggedElement = e.target;
+        e.target.classList.add('dragging');
+        e.dataTransfer.effectAllowed = 'move';
+        e.dataTransfer.setData('text/html', e.target.outerHTML);
+    }
+
+    function handleDragEnd(e) {
+        e.target.classList.remove('dragging');
+        draggedElement = null;
+    }
+
+    function handleDragOver(e) {
+        e.preventDefault();
+        e.dataTransfer.dropEffect = 'move';
+    }
+
+    function handleDragEnter(e) {
+        e.preventDefault();
+        e.target.closest('.kanban-column').classList.add('drag-over');
+    }
+
+    function handleDragLeave(e) {
+        const column = e.target.closest('.kanban-column');
+        if (!column.contains(e.relatedTarget)) {
+            column.classList.remove('drag-over');
+        }
+    }
+
+    function handleDrop(e) {
+        e.preventDefault();
+        const column = e.target.closest('.kanban-column');
+        column.classList.remove('drag-over');
+
+        if (draggedElement && column) {
+            const newStatus = column.dataset.status;
+            const taskId = draggedElement.dataset.taskId;
+            
+            // タスクのステータスを更新
+            updateTaskStatus(taskId, newStatus);
+            
+            // カードを新しい列に移動
+            column.querySelector('.kanban-tasks').appendChild(draggedElement);
+            
+            // カウントを更新
+            updateColumnCounts();
+        }
+    }
+
+    function updateTaskStatus(taskId, newStatus) {
+        // AJAXでサーバーにステータス更新を送信
+        fetch(`{% url 'helloworldapp:update_task_status' 0 %}`.replace('0', taskId), {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value
+            },
+            body: JSON.stringify({
+                status: newStatus
+            })
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                // 成功メッセージを表示
+                showNotification(`タスクのステータスを「${getStatusLabel(newStatus)}」に更新しました`, 'success');
+            } else {
+                // エラーメッセージを表示
+                showNotification('ステータスの更新に失敗しました', 'error');
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            showNotification('ステータスの更新に失敗しました', 'error');
+        });
+    }
+
+    function getStatusLabel(status) {
+        const labels = {
+            'pending': '未着手',
+            'in_progress': '進行中',
+            'on_hold': '保留',
+            'completed': '完了'
+        };
+        return labels[status] || status;
+    }
+
+    function showNotification(message, type) {
+        // 簡単な通知表示（実際の実装では既存のメッセージシステムを使用）
+        const notification = document.createElement('div');
+        notification.className = `notification notification-${type}`;
+        notification.textContent = message;
+        notification.style.cssText = `
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            padding: 1rem;
+            background: ${type === 'success' ? '#10b981' : '#ef4444'};
+            color: white;
+            border-radius: 0.5rem;
+            z-index: 1000;
+        `;
+        document.body.appendChild(notification);
+        
+        setTimeout(() => {
+            notification.remove();
+        }, 3000);
+    }
+
+    // カンバンボードが表示されたときにドラッグアンドドロップを設定
+    const observer = new MutationObserver(function(mutations) {
+        mutations.forEach(function(mutation) {
+            if (mutation.type === 'attributes' && mutation.attributeName === 'style') {
+                const kanbanView = document.getElementById('kanban-view');
+                if (kanbanView && kanbanView.style.display !== 'none') {
+                    setupDragAndDrop();
+                }
+            }
+        });
+    });
+
+    observer.observe(document.getElementById('kanban-view'), {
+        attributes: true,
+        attributeFilter: ['style']
+    });
+});
+</script>
 {% endblock scripts_extra %}

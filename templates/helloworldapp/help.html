@@ -1,111 +1,380 @@
+{% extends "helloworldapp/base.html" %}
 {% load static %}
-<!DOCTYPE html>
-<html lang="ja">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{{ page_title|default:"ヘルプ" }} - TaskFlow</title>
-    <link rel="stylesheet" href="{% static 'helloworldapp/css/styles.css' %}">
-    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
-</head>
-<body>
-    <div class="app-container">
-        <header class="header">
-            <div class="logo">TaskFlow</div>
-            <div class="search-bar"><i class="fas fa-search search-icon"></i><input type="text" placeholder="タスクを検索..." id="search-input"></div>
-            <div class="header-actions">
-                <div class="notification" id="notification-icon"><i class="fas fa-bell"></i></div>
-                <div class="user-profile" id="user-profile"><div class="avatar">{% if user.is_authenticated %}{{ user.username.0|upper }}{{ user.username.1|upper|default:'' }}{% else %}<i class="fas fa-user"></i>{% endif %}</div></div>
-            </div>
-        </header>
 
-        <div class="main-container">
-            <aside class="sidebar">
-                <nav class="main-nav">
-                    <ul id="navigation-menu">
-                        <li><a href="{% url 'helloworldapp:main_page' %}"><i class="fas fa-chart-pie"></i>ダッシュボード</a></li>
-                        {% if user.is_authenticated %}
-                        <li><a href="{% url 'helloworldapp:my_tasks_view' %}"><i class="fas fa-tasks"></i>マイタスク</a></li>
-                        <li><a href="{% url 'helloworldapp:my_page_view' %}"><i class="fas fa-user-circle"></i>マイページ</a></li>
-                        <li><a href="{% url 'helloworldapp:calendar_view' %}"><i class="fas fa-calendar"></i>カレンダー</a></li>
-                        <li {% if request.resolver_match.url_name == 'team_list_view' or request.resolver_match.url_name == 'team_detail_view' or request.resolver_match.url_name == 'manage_team_members_view' or request.resolver_match.url_name == 'team_edit_view' or request.resolver_match.url_name == 'team_delete_view' or request.resolver_match.url_name == 'leave_team_view' or request.resolver_match.url_name == 'team_dashboard_view' %}class="active"{% endif %}><a href="{% url 'helloworldapp:team_list_view' %}"><i class="fas fa-users"></i>チーム</a></li>
-                        {% endif %}
-                        <li><a href="#"><i class="fas fa-folder"></i>プロジェクト</a></li>
-                        <li><a href="#"><i class="fas fa-chart-line"></i>レポート</a></li>
-                        {# ★★★ ヘルプへのリンクをサイドバーに追加（このページではアクティブ） ★★★ #}
-                        <li {% if request.resolver_match.url_name == 'help_view' %}class="active"{% endif %}><a href="{% url 'helloworldapp:help_view' %}"><i class="fas fa-question-circle"></i>ヘルプ</a></li>
-                    </ul>
-                </nav>
-                <div class="team-members"><h3>チームメンバー</h3><ul><li><div class="member-avatar" style="background-color: #4caf50;">TK</div> <span class="member-name">戸倉 悠偉</span> <span class="status-indicator online"></span></li><li><div class="member-avatar" style="background-color: #ff9800;">YS</div> <span class="member-name">佐藤 朱音</span> <span class="status-indicator online"></span></li><li><div class="member-avatar" style="background-color: #9c27b0;">KM</div> <span class="member-name">新井 結</span> <span class="status-indicator away"></span></li></ul></div>
-            </aside>
+{% block title %}ヘルプ{% endblock title %}
 
-            <main class="content">
-                <div class="page-header">
-                    <h1><i class="fas fa-question-circle"></i> {{ page_title|default:"ヘルプ" }}</h1>
-                </div>
+{% block head_extra %}
+<style>
+.help-container {
+    max-width: 1000px;
+    margin: 0 auto;
+    padding: var(--space-8);
+}
 
-                {% if messages %}<ul class="messages">{% for message in messages %}<li{% if message.tags %} class="{{ message.tags }}"{% endif %}>{{ message }}</li>{% endfor %}</ul>{% endif %}
+.help-header {
+    text-align: center;
+    margin-bottom: var(--space-12);
+}
 
-                <div class="help-content">
-                    <section class="help-section">
-                        <h2><i class="fas fa-user"></i> アカウントについて</h2>
-                        <h3>新規登録</h3>
-                        <p>新しいアカウントを作成するには、ナビゲーションメニューの「新規登録」から必要な情報を入力してください。</p>
-                        <h3>ログイン・ログアウト</h3>
-                        <p>既存のアカウントでログインするには、「ログイン」ページをご利用ください。ログアウトはユーザーメニューから行えます。</p>
-                        <h3>パスワード変更</h3>
-                        <p>ログイン後、ユーザーメニューの「パスワード変更」からパスワードを変更できます。</p>
-                        <h3>マイページ</h3>
-                        <p>ユーザーメニューまたはサイドバーの「マイページ」から、ご自身の登録情報やタスクの統計を確認できます。</p>
-                    </section>
+.help-title {
+    font-size: var(--font-size-4xl);
+    font-weight: var(--font-weight-bold);
+    color: var(--gray-900);
+    margin-bottom: var(--space-4);
+}
 
-                    <section class="help-section">
-                        <h2><i class="fas fa-tasks"></i> タスク管理について</h2>
-                        <h3>タスクの作成</h3>
-                        <p>メインダッシュボードの「タスク一覧」セクションの右上にある「追加」ボタン、または特定のプロジェクトボードやチームダッシュボード（将来実装予定）から新しいタスクを作成できます。タスク名、説明、プロジェクト、担当者、担当チーム、期限日、優先度、ステータスを設定できます。</p>
-                        <h3>タスクの表示・編集・削除</h3>
-                        <p>作成されたタスクは、メインダッシュボードやマイタスクページ、カレンダービュー、プロジェクトボード、チームダッシュボードに表示されます。タスク名をクリックすると詳細ページが表示され、そこからタスクの編集や削除が行えます。</p>
-                    </section>
+.help-subtitle {
+    font-size: var(--font-size-lg);
+    color: var(--gray-600);
+}
 
-                    <section class="help-section">
-                        <h2><i class="fas fa-folder-open"></i> プロジェクトについて</h2>
-                        <h3>プロジェクトボード</h3>
-                        <p>メインダッシュボードの「プロジェクト一覧」から各プロジェクトのボードにアクセスできます。プロジェクトボードでは、そのプロジェクトに属するタスクがステータス（未着手、進行中など）ごとにカラム表示され、進捗を一目で確認できます。</p>
-                    </section>
+.help-sections {
+    display: grid;
+    gap: var(--space-8);
+}
 
-                    <section class="help-section">
-                        <h2><i class="fas fa-users"></i> チーム機能について</h2>
-                        <h3>チームの作成</h3>
-                        <p>メインダッシュボードの「新しいチームを作成」ボタンから、新しいチームを作成できます。作成者は自動的にそのチームの最初のメンバーになります。</p>
-                        <h3>チーム一覧・詳細</h3>
-                        <p>サイドバーの「チーム」メニューから、参加しているチームの一覧を確認できます。各チーム名をクリックすると、チームの詳細情報（説明、メンバーリストなど）が表示されます。</p>
-                        <h3>メンバー管理</h3>
-                        <p>チームの作成者（または管理者）は、チーム詳細ページの「チーム操作」セクションにある「メンバーを管理する」リンクから、チームへのメンバー追加や既存メンバーの削除を行えます。</p>
-                        <h3>チームからの脱退</h3>
-                        <p>チームのメンバー（作成者を除く）は、チーム詳細ページの「チーム操作」セクションにある「チームから脱退する」リンクから、チームを脱退できます。</p>
-                        <h3>チームダッシュボード</h3>
-                        <p>チーム詳細ページの「チーム操作」セクションにある「チームダッシュボードを見る」リンクから、そのチームに割り当てられたタスクをステータスごとに確認できるボードにアクセスできます。</p>
-                    </section>
-                    
-                    <section class="help-section">
-                        <h2><i class="fas fa-calendar-alt"></i> カレンダービューについて</h2>
-                        <p>サイドバーの「カレンダー」メニューから、自分に割り当てられたタスクのうち、期限日が設定されているものがカレンダー形式で表示されます。各タスクをクリックすると詳細ページに移動できます。</p>
-                    </section>
+.help-section {
+    background: var(--white);
+    border: 1px solid var(--gray-200);
+    border-radius: var(--radius-2xl);
+    padding: var(--space-8);
+    box-shadow: var(--shadow-sm);
+}
 
-                    <section class="help-section">
-                        <h2>その他</h2>
-                        <p>このアプリケーションに関するご不明な点や問題がございましたら、管理者にお問い合わせください。</p>
-                    </section>
-                </div>
-            </main>
-        </div>
+.section-header {
+    display: flex;
+    align-items: center;
+    gap: var(--space-4);
+    margin-bottom: var(--space-6);
+    padding-bottom: var(--space-4);
+    border-bottom: 1px solid var(--gray-200);
+}
 
-        <div class="user-menu" id="user-menu" style="display: none;">
-            {% if user.is_authenticated %}<div class="user-menu-header"><div class="avatar">{{ user.username.0|upper }}{{ user.username.1|upper|default:'' }}</div><div class="user-info"><h3>{{ user.get_full_name|default:user.username }}</h3><p>{{ user.email|default:"メール未設定" }}</p></div></div><div class="user-menu-items"><a href="{% url 'helloworldapp:main_page' %}" class="user-menu-item"><i class="fas fa-chart-pie"></i> ダッシュボード</a><a href="{% url 'helloworldapp:my_tasks_view' %}" class="user-menu-item"><i class="fas fa-tasks"></i> マイタスク</a><a href="{% url 'helloworldapp:my_page_view' %}" class="user-menu-item"><i class="fas fa-user-circle"></i> マイページ</a><a href="{% url 'helloworldapp:help_view' %}" class="user-menu-item"><i class="fas fa-question-circle"></i> ヘルプ</a><a href="{% url 'helloworldapp:logout_view' %}" class="user-menu-item logout"><i class="fas fa-sign-out-alt"></i> ログアウト</a></div>{% else %}<div class="user-menu-items"><a href="{% url 'helloworldapp:login_view' %}" class="user-menu-item"><i class="fas fa-sign-in-alt"></i> ログイン</a><a href="{% url 'helloworldapp:signup_view' %}" class="user-menu-item"><i class="fas fa-user-plus"></i> 新規登録</a><a href="{% url 'helloworldapp:help_view' %}" class="user-menu-item"><i class="fas fa-question-circle"></i> ヘルプ</a></div>{% endif %}
-        </div>
-        <div class="overlay" id="overlay" style="display: none;"></div>
+.section-icon {
+    width: 48px;
+    height: 48px;
+    border-radius: var(--radius-full);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--white);
+    font-size: var(--font-size-lg);
+}
+
+.section-title {
+    font-size: var(--font-size-2xl);
+    font-weight: var(--font-weight-bold);
+    color: var(--gray-900);
+}
+
+.section-content {
+    color: var(--gray-700);
+    line-height: var(--line-height-relaxed);
+}
+
+.feature-list {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: var(--space-6);
+    margin-top: var(--space-6);
+}
+
+.feature-item {
+    display: flex;
+    align-items: flex-start;
+    gap: var(--space-4);
+    padding: var(--space-4);
+    background: var(--gray-50);
+    border-radius: var(--radius-xl);
+    transition: all var(--transition-fast);
+}
+
+.feature-item:hover {
+    background: var(--primary-50);
+    transform: translateY(-2px);
+}
+
+.feature-icon {
+    width: 40px;
+    height: 40px;
+    border-radius: var(--radius-full);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--white);
+    font-size: var(--font-size-sm);
+    flex-shrink: 0;
+}
+
+.feature-content h4 {
+    font-size: var(--font-size-lg);
+    font-weight: var(--font-weight-semibold);
+    color: var(--gray-900);
+    margin-bottom: var(--space-2);
+}
+
+.feature-content p {
+    color: var(--gray-600);
+    font-size: var(--font-size-sm);
+    line-height: var(--line-height-relaxed);
+}
+
+.quick-links {
+    background: var(--primary-50);
+    border: 1px solid var(--primary-200);
+    border-radius: var(--radius-2xl);
+    padding: var(--space-8);
+    margin-top: var(--space-8);
+}
+
+.quick-links-header {
+    text-align: center;
+    margin-bottom: var(--space-6);
+}
+
+.quick-links-title {
+    font-size: var(--font-size-2xl);
+    font-weight: var(--font-weight-bold);
+    color: var(--primary-900);
+    margin-bottom: var(--space-2);
+}
+
+.quick-links-subtitle {
+    color: var(--primary-700);
+}
+
+.quick-links-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: var(--space-4);
+}
+
+.quick-link {
+    background: var(--white);
+    border: 1px solid var(--primary-200);
+    border-radius: var(--radius-xl);
+    padding: var(--space-6);
+    text-decoration: none;
+    color: var(--primary-800);
+    transition: all var(--transition-fast);
+    display: flex;
+    align-items: center;
+    gap: var(--space-4);
+}
+
+.quick-link:hover {
+    background: var(--primary-100);
+    border-color: var(--primary-300);
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-md);
+}
+
+.quick-link-icon {
+    width: 40px;
+    height: 40px;
+    border-radius: var(--radius-full);
+    background: linear-gradient(135deg, var(--primary-500), var(--primary-600));
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--white);
+    font-size: var(--font-size-lg);
+}
+
+.quick-link-content h4 {
+    font-size: var(--font-size-lg);
+    font-weight: var(--font-weight-semibold);
+    margin-bottom: var(--space-1);
+}
+
+.quick-link-content p {
+    font-size: var(--font-size-sm);
+    color: var(--primary-600);
+}
+</style>
+{% endblock head_extra %}
+
+{% block content %}
+<div class="help-container">
+    <div class="help-header">
+        <h1 class="help-title">
+            <i class="fas fa-question-circle"></i> ヘルプ・使い方
+        </h1>
+        <p class="help-subtitle">TaskFlowの機能と使い方をご紹介します</p>
     </div>
-    <script src="{% static 'helloworldapp/js/script.js' %}"></script>
-</body>
-</html>
+    
+    <div class="help-sections">
+        <!-- 基本機能 -->
+        <div class="help-section">
+            <div class="section-header">
+                <div class="section-icon" style="background: linear-gradient(135deg, #4caf50, #45a049);">
+                    <i class="fas fa-tasks"></i>
+                </div>
+                <h2 class="section-title">タスク管理</h2>
+            </div>
+            <div class="section-content">
+                <p>タスクの作成、編集、削除、ステータス管理ができます。優先度や期限を設定し、効率的にタスクを管理しましょう。</p>
+                <div class="feature-list">
+                    <div class="feature-item">
+                        <div class="feature-icon" style="background: linear-gradient(135deg, #2196f3, #1976d2);">
+                            <i class="fas fa-plus"></i>
+                        </div>
+                        <div class="feature-content">
+                            <h4>タスク作成</h4>
+                            <p>タイトル、説明、期限、優先度を設定してタスクを作成</p>
+                        </div>
+                    </div>
+                    <div class="feature-item">
+                        <div class="feature-icon" style="background: linear-gradient(135deg, #ff9800, #f57c00);">
+                            <i class="fas fa-edit"></i>
+                        </div>
+                        <div class="feature-content">
+                            <h4>ステータス管理</h4>
+                            <p>未着手、進行中、完了、保留のステータスで管理</p>
+                        </div>
+                    </div>
+                    <div class="feature-item">
+                        <div class="feature-icon" style="background: linear-gradient(135deg, #9c27b0, #7b1fa2);">
+                            <i class="fas fa-calendar"></i>
+                        </div>
+                        <div class="feature-content">
+                            <h4>カレンダー表示</h4>
+                            <p>期限をカレンダーで視覚的に確認</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- プロジェクト管理 -->
+        <div class="help-section">
+            <div class="section-header">
+                <div class="section-icon" style="background: linear-gradient(135deg, #2196f3, #1976d2);">
+                    <i class="fas fa-folder"></i>
+                </div>
+                <h2 class="section-title">プロジェクト管理</h2>
+            </div>
+            <div class="section-content">
+                <p>プロジェクトを作成し、関連するタスクをグループ化して管理できます。プロジェクトごとに進捗を追跡しましょう。</p>
+                <div class="feature-list">
+                    <div class="feature-item">
+                        <div class="feature-icon" style="background: linear-gradient(135deg, #4caf50, #45a049);">
+                            <i class="fas fa-folder-plus"></i>
+                        </div>
+                        <div class="feature-content">
+                            <h4>プロジェクト作成</h4>
+                            <p>プロジェクト名と説明を設定してプロジェクトを作成</p>
+                        </div>
+                    </div>
+                    <div class="feature-item">
+                        <div class="feature-icon" style="background: linear-gradient(135deg, #ff9800, #f57c00);">
+                            <i class="fas fa-chart-bar"></i>
+                        </div>
+                        <div class="feature-content">
+                            <h4>進捗管理</h4>
+                            <p>プロジェクト内のタスクの進捗を一覧で確認</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- チーム機能 -->
+        <div class="help-section">
+            <div class="section-header">
+                <div class="section-icon" style="background: linear-gradient(135deg, #9c27b0, #7b1fa2);">
+                    <i class="fas fa-users"></i>
+                </div>
+                <h2 class="section-title">チーム機能</h2>
+            </div>
+            <div class="section-content">
+                <p>チームを作成し、メンバーを招待して協力してタスクを管理できます。チーム内でのタスクの割り当てや進捗共有が可能です。</p>
+                <div class="feature-list">
+                    <div class="feature-item">
+                        <div class="feature-icon" style="background: linear-gradient(135deg, #4caf50, #45a049);">
+                            <i class="fas fa-user-plus"></i>
+                        </div>
+                        <div class="feature-content">
+                            <h4>チーム作成</h4>
+                            <p>チーム名と説明を設定してチームを作成</p>
+                        </div>
+                    </div>
+                    <div class="feature-item">
+                        <div class="feature-icon" style="background: linear-gradient(135deg, #2196f3, #1976d2);">
+                            <i class="fas fa-user-friends"></i>
+                        </div>
+                        <div class="feature-content">
+                            <h4>メンバー管理</h4>
+                            <p>チームメンバーの追加・削除・権限管理</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- クイックリンク -->
+    <div class="quick-links">
+        <div class="quick-links-header">
+            <h2 class="quick-links-title">クイックリンク</h2>
+            <p class="quick-links-subtitle">よく使用する機能に素早くアクセス</p>
+        </div>
+        <div class="quick-links-grid">
+            <a href="{% url 'helloworldapp:main_page' %}" class="quick-link">
+                <div class="quick-link-icon">
+                    <i class="fas fa-chart-pie"></i>
+                </div>
+                <div class="quick-link-content">
+                    <h4>ダッシュボード</h4>
+                    <p>タスクの概要を確認</p>
+                </div>
+            </a>
+            <a href="{% url 'helloworldapp:my_tasks_view' %}" class="quick-link">
+                <div class="quick-link-icon">
+                    <i class="fas fa-tasks"></i>
+                </div>
+                <div class="quick-link-content">
+                    <h4>マイタスク</h4>
+                    <p>担当タスクを管理</p>
+                </div>
+            </a>
+            <a href="{% url 'helloworldapp:project_list_view' %}" class="quick-link">
+                <div class="quick-link-icon">
+                    <i class="fas fa-folder"></i>
+                </div>
+                <div class="quick-link-content">
+                    <h4>プロジェクト</h4>
+                    <p>プロジェクトを管理</p>
+                </div>
+            </a>
+            <a href="{% url 'helloworldapp:team_list_view' %}" class="quick-link">
+                <div class="quick-link-icon">
+                    <i class="fas fa-users"></i>
+                </div>
+                <div class="quick-link-content">
+                    <h4>チーム</h4>
+                    <p>チームを管理</p>
+                </div>
+            </a>
+            <a href="{% url 'helloworldapp:calendar_view' %}" class="quick-link">
+                <div class="quick-link-icon">
+                    <i class="fas fa-calendar"></i>
+                </div>
+                <div class="quick-link-content">
+                    <h4>カレンダー</h4>
+                    <p>スケジュールを確認</p>
+                </div>
+            </a>
+            <a href="{% url 'helloworldapp:app_settings_view' %}" class="quick-link">
+                <div class="quick-link-icon">
+                    <i class="fas fa-cog"></i>
+                </div>
+                <div class="quick-link-content">
+                    <h4>設定</h4>
+                    <p>アプリケーション設定</p>
+                </div>
+            </a>
+        </div>
+    </div>
+</div>
+{% endblock content %}

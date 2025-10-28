@@ -1,0 +1,53 @@
+{% extends 'helloworldapp/base.html' %}
+{% load static %}
+
+{% block content %}
+<div class="page-header">
+    <h1><i class="fas fa-exclamation-triangle"></i> {{ page_title|default:"プロジェクト削除確認" }}</h1>
+</div>
+
+{% if messages %}
+<ul class="messages">
+    {% for message in messages %}
+    <li{% if message.tags %} class="{{ message.tags }}"{% endif %}>{{ message }}</li>
+    {% endfor %}
+</ul>
+{% endif %}
+
+<div class="delete-confirmation-container">
+    <div class="warning-card">
+        <div class="warning-icon">
+            <i class="fas fa-exclamation-triangle"></i>
+        </div>
+        <h2>プロジェクトを削除しますか？</h2>
+        <p>この操作は取り消すことができません。プロジェクト「<strong>{{ project.name }}</strong>」とその関連データが完全に削除されます。</p>
+        
+        <div class="project-info">
+            <h3>削除されるプロジェクト情報</h3>
+            <div class="info-item">
+                <strong>プロジェクト名:</strong> {{ project.name }}
+            </div>
+            {% if project.description %}
+            <div class="info-item">
+                <strong>説明:</strong> {{ project.description|truncatewords_html:20 }}
+            </div>
+            {% endif %}
+            <div class="info-item">
+                <strong>作成日:</strong> {{ project.created_at|date:"Y年n月j日 H:i" }}
+            </div>
+        </div>
+        
+        <div class="warning-actions">
+            <form method="post" class="delete-form">
+                {% csrf_token %}
+                <button type="submit" class="btn-delete-confirm">
+                    <i class="fas fa-trash"></i> 削除を実行
+                </button>
+            </form>
+            <a href="{% url 'helloworldapp:project_detail_view' project.id %}" class="btn-cancel">
+                <i class="fas fa-times"></i> キャンセル
+            </a>
+        </div>
+    </div>
+</div>
+{% endblock %}

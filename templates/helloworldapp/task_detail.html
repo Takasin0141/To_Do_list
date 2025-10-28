@@ -1,79 +1,292 @@
+{% extends "helloworldapp/base.html" %}
 {% load static %}
-<!DOCTYPE html>
-<html lang="ja">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{{ page_title|default:"タスク詳細" }} - TaskFlow</title>
-    <link rel="stylesheet" href="{% static 'helloworldapp/css/styles.css' %}">
-    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
-</head>
-<body>
-    <div class="app-container">
-        <header class="header">
-            <div class="logo">TaskFlow</div>
-            <div class="search-bar"><i class="fas fa-search search-icon"></i><input type="text" placeholder="タスクを検索..." id="search-input"></div>
-            <div class="header-actions">
-                <div class="notification" id="notification-icon"><i class="fas fa-bell"></i></div>
-                <div class="user-profile" id="user-profile"><div class="avatar">{% if user.is_authenticated %}{{ user.username.0|upper }}{{ user.username.1|upper|default:'' }}{% else %}<i class="fas fa-user"></i>{% endif %}</div></div>
+
+{% block title %}タスク詳細 - {{ task.title }}{% endblock title %}
+
+{% block head_extra %}
+<style>
+.task-detail-container {
+    max-width: 800px;
+    margin: 0 auto;
+    padding: var(--space-8);
+}
+
+.task-detail-card {
+    background: var(--white);
+    border: 1px solid var(--gray-200);
+    border-radius: var(--radius-2xl);
+    padding: var(--space-8);
+    margin-bottom: var(--space-8);
+    box-shadow: var(--shadow-sm);
+}
+
+.task-title {
+    font-size: var(--font-size-3xl);
+    font-weight: var(--font-weight-bold);
+    color: var(--gray-900);
+    margin-bottom: var(--space-6);
+    padding-bottom: var(--space-4);
+    border-bottom: 1px solid var(--gray-200);
+}
+
+.task-details-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: var(--space-6);
+    margin-bottom: var(--space-8);
+}
+
+.detail-item {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-2);
+}
+
+.detail-label {
+    font-weight: var(--font-weight-semibold);
+    color: var(--gray-700);
+    font-size: var(--font-size-sm);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+}
+
+.detail-value {
+    font-size: var(--font-size-lg);
+    color: var(--gray-900);
+}
+
+.status-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--space-2);
+    padding: var(--space-2) var(--space-4);
+    border-radius: var(--radius-full);
+    font-size: var(--font-size-sm);
+    font-weight: var(--font-weight-medium);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+}
+
+.status-pending {
+    background: var(--yellow-100);
+    color: var(--yellow-800);
+}
+
+.status-in_progress {
+    background: var(--blue-100);
+    color: var(--blue-800);
+}
+
+.status-completed {
+    background: var(--green-100);
+    color: var(--green-800);
+}
+
+.status-on_hold {
+    background: var(--gray-100);
+    color: var(--gray-800);
+}
+
+.priority-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--space-2);
+    padding: var(--space-2) var(--space-4);
+    border-radius: var(--radius-full);
+    font-size: var(--font-size-sm);
+    font-weight: var(--font-weight-medium);
+}
+
+.priority-high {
+    background: var(--red-100);
+    color: var(--red-800);
+}
+
+.priority-medium {
+    background: var(--yellow-100);
+    color: var(--yellow-800);
+}
+
+.priority-low {
+    background: var(--green-100);
+    color: var(--green-800);
+}
+
+.task-description {
+    background: var(--gray-50);
+    border: 1px solid var(--gray-200);
+    border-radius: var(--radius-xl);
+    padding: var(--space-6);
+    margin: var(--space-6) 0;
+}
+
+.description-title {
+    font-size: var(--font-size-lg);
+    font-weight: var(--font-weight-semibold);
+    color: var(--gray-900);
+    margin-bottom: var(--space-4);
+}
+
+.description-content {
+    color: var(--gray-700);
+    line-height: var(--line-height-relaxed);
+    white-space: pre-wrap;
+}
+
+.task-actions {
+    display: flex;
+    gap: var(--space-4);
+    flex-wrap: wrap;
+    margin-top: var(--space-8);
+    padding-top: var(--space-6);
+    border-top: 1px solid var(--gray-200);
+}
+
+.btn-edit {
+    background: linear-gradient(135deg, var(--primary-500), var(--primary-600));
+    color: var(--white);
+    border: none;
+    padding: var(--space-3) var(--space-6);
+    border-radius: var(--radius-lg);
+    font-weight: var(--font-weight-medium);
+    text-decoration: none;
+    display: inline-flex;
+    align-items: center;
+    gap: var(--space-2);
+    transition: all var(--transition-fast);
+}
+
+.btn-edit:hover {
+    background: linear-gradient(135deg, var(--primary-600), var(--primary-700));
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-lg);
+}
+
+.btn-delete {
+    background: linear-gradient(135deg, var(--red-500), var(--red-600));
+    color: var(--white);
+    border: none;
+    padding: var(--space-3) var(--space-6);
+    border-radius: var(--radius-lg);
+    font-weight: var(--font-weight-medium);
+    text-decoration: none;
+    display: inline-flex;
+    align-items: center;
+    gap: var(--space-2);
+    transition: all var(--transition-fast);
+}
+
+.btn-delete:hover {
+    background: linear-gradient(135deg, var(--red-600), var(--red-700));
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-lg);
+}
+
+.back-link {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--space-2);
+    color: var(--gray-600);
+    text-decoration: none;
+    font-weight: var(--font-weight-medium);
+    margin-bottom: var(--space-6);
+    transition: color var(--transition-fast);
+}
+
+.back-link:hover {
+    color: var(--primary-600);
+}
+</style>
+{% endblock head_extra %}
+
+{% block content %}
+<div class="task-detail-container">
+    <a href="javascript:history.back()" class="back-link">
+        <i class="fas fa-arrow-left"></i> 前のページに戻る
+    </a>
+    
+    <div class="task-detail-card">
+        <h1 class="task-title">{{ task.title }}</h1>
+        
+        <div class="task-details-grid">
+            <div class="detail-item">
+                <span class="detail-label">ステータス</span>
+                <span class="status-badge status-{{ task.status }}">
+                    {% if task.status == 'pending' %}<i class="fas fa-clock"></i>{% endif %}
+                    {% if task.status == 'in_progress' %}<i class="fas fa-play"></i>{% endif %}
+                    {% if task.status == 'completed' %}<i class="fas fa-check"></i>{% endif %}
+                    {% if task.status == 'on_hold' %}<i class="fas fa-pause"></i>{% endif %}
+                    {{ task.get_status_display }}
+                </span>
             </div>
-        </header>
-
-        <div class="main-container">
-            <aside class="sidebar">
-                <nav class="main-nav">
-                    <ul id="navigation-menu">
-                        <li><a href="{% url 'helloworldapp:main_page' %}"><i class="fas fa-chart-pie"></i>ダッシュボード</a></li>
-                        {% if user.is_authenticated %}
-                        <li><a href="{% url 'helloworldapp:my_tasks_view' %}"><i class="fas fa-tasks"></i>マイタスク</a></li>
-                        <li><a href="{% url 'helloworldapp:my_page_view' %}"><i class="fas fa-user-circle"></i>マイページ</a></li>
-                        <li><a href="{% url 'helloworldapp:calendar_view' %}"><i class="fas fa-calendar"></i>カレンダー</a></li>
-                        <li {% if request.resolver_match.url_name == 'team_list_view' or request.resolver_match.url_name == 'team_detail_view' or request.resolver_match.url_name == 'manage_team_members_view' or request.resolver_match.url_name == 'team_edit_view' or request.resolver_match.url_name == 'team_delete_view' or request.resolver_match.url_name == 'leave_team_view' %}class="active"{% endif %}><a href="{% url 'helloworldapp:team_list_view' %}"><i class="fas fa-users"></i>チーム</a></li>
-                        {% endif %}
-                        <li><a href="#"><i class="fas fa-folder"></i>プロジェクト</a></li>
-                        <li><a href="#"><i class="fas fa-chart-line"></i>レポート</a></li>
-                    </ul>
-                </nav>
-                <div class="team-members"><h3>チームメンバー</h3><ul><li><div class="member-avatar" style="background-color: #4caf50;">TK</div> <span class="member-name">戸倉 悠偉</span> <span class="status-indicator online"></span></li><li><div class="member-avatar" style="background-color: #ff9800;">YS</div> <span class="member-name">佐藤 朱音</span> <span class="status-indicator online"></span></li><li><div class="member-avatar" style="background-color: #9c27b0;">KM</div> <span class="member-name">新井 結</span> <span class="status-indicator away"></span></li></ul></div>
-            </aside>
-
-            <main class="content">
-                <a href="javascript:history.back()" class="back-link"><i class="fas fa-arrow-left"></i> 前のページに戻る</a>
-                
-                <div class="task-detail-card">
-                    <h2>{{ task.title }}</h2>
-                    <div class="task-detail-item"><strong>ステータス:</strong> <span class="status-badge status-{{ task.status }}">{{ task.get_status_display }}</span></div>
-                    <div class="task-detail-item"><strong>優先度:</strong> <span class="priority-badge priority-{{ task.priority }}">{{ task.get_priority_display }}</span></div>
-                    {% if task.project %}<div class="task-detail-item"><strong>プロジェクト:</strong> {{ task.project.name }}</div>{% endif %}
-                    {% if task.assignee %}<div class="task-detail-item"><strong>担当者:</strong> {{ task.assignee.get_full_name|default:task.assignee.username }}</div>{% endif %}
-                    
-                    {# ★★★ 担当チームの表示を追加 ★★★ #}
-                    {% if task.assigned_team %}
-                    <div class="task-detail-item">
-                        <strong>担当チーム:</strong> <a href="{% url 'helloworldapp:team_detail_view' task.assigned_team.id %}">{{ task.assigned_team.name }}</a>
-                    </div>
-                    {% endif %}
-                    {# ★★★ ここまで ★★★ #}
-
-                    {% if task.due_date %}<div class="task-detail-item"><strong>期限日:</strong> {{ task.due_date|date:"Y年n月j日" }}</div>{% endif %}
-                    <div class="task-detail-item"><strong>詳細説明:</strong> {% if task.description %}<p>{{ task.description|linebreaksbr }}</p>{% else %}<p>(説明なし)</p>{% endif %}</div>
-                    <div class="task-detail-item"><strong>作成日時:</strong> {{ task.created_at|date:"Y年n月j日 H:i" }}</div>
-                    <div class="task-detail-item"><strong>最終更新日時:</strong> {{ task.updated_at|date:"Y年n月j日 H:i" }}</div>
-
-                    <div class="task-actions">
-                        <a href="{% url 'helloworldapp:task_edit_view' task.id %}" class="btn btn-edit"><i class="fas fa-edit"></i> 編集</a>
-                        <a href="{% url 'helloworldapp:task_delete_view' task.id %}" class="btn btn-delete"><i class="fas fa-trash-alt"></i> 削除</a>
-                    </div>
-                </div>
-            </main>
+            
+            <div class="detail-item">
+                <span class="detail-label">優先度</span>
+                <span class="priority-badge priority-{{ task.priority }}">
+                    {% if task.priority == 'high' %}<i class="fas fa-exclamation"></i>{% endif %}
+                    {% if task.priority == 'medium' %}<i class="fas fa-minus"></i>{% endif %}
+                    {% if task.priority == 'low' %}<i class="fas fa-arrow-down"></i>{% endif %}
+                    {{ task.get_priority_display }}
+                </span>
+            </div>
+            
+            {% if task.project %}
+            <div class="detail-item">
+                <span class="detail-label">プロジェクト</span>
+                <span class="detail-value">
+                    <i class="fas fa-folder"></i> {{ task.project.name }}
+                </span>
+            </div>
+            {% endif %}
+            
+            {% if task.assignee %}
+            <div class="detail-item">
+                <span class="detail-label">担当者</span>
+                <span class="detail-value">
+                    <i class="fas fa-user"></i> {{ task.assignee.get_full_name|default:task.assignee.username }}
+                </span>
+            </div>
+            {% endif %}
+            
+            {% if task.due_date %}
+            <div class="detail-item">
+                <span class="detail-label">期限</span>
+                <span class="detail-value">
+                    <i class="fas fa-calendar"></i> {{ task.due_date|date:"Y年n月j日" }}
+                </span>
+            </div>
+            {% endif %}
+            
+            <div class="detail-item">
+                <span class="detail-label">作成日</span>
+                <span class="detail-value">
+                    <i class="fas fa-calendar-plus"></i> {{ task.created_at|date:"Y年n月j日 H:i" }}
+                </span>
+            </div>
+            
+            <div class="detail-item">
+                <span class="detail-label">更新日</span>
+                <span class="detail-value">
+                    <i class="fas fa-calendar-check"></i> {{ task.updated_at|date:"Y年n月j日 H:i" }}
+                </span>
+            </div>
         </div>
-
-        <div class="user-menu" id="user-menu" style="display: none;">
-            {% if user.is_authenticated %}<div class="user-menu-header"><div class="avatar">{{ user.username.0|upper }}{{ user.username.1|upper|default:'' }}</div><div class="user-info"><h3>{{ user.get_full_name|default:user.username }}</h3><p>{{ user.email|default:"メール未設定" }}</p></div></div><div class="user-menu-items"><a href="{% url 'helloworldapp:main_page' %}" class="user-menu-item"><i class="fas fa-chart-pie"></i> ダッシュボード</a><a href="{% url 'helloworldapp:my_tasks_view' %}" class="user-menu-item"><i class="fas fa-tasks"></i> マイタスク</a><a href="{% url 'helloworldapp:my_page_view' %}" class="user-menu-item"><i class="fas fa-user-circle"></i> マイページ</a><a href="{% url 'helloworldapp:logout_view' %}" class="user-menu-item logout"><i class="fas fa-sign-out-alt"></i> ログアウト</a></div>{% else %}<div class="user-menu-items"><a href="{% url 'helloworldapp:login_view' %}" class="user-menu-item"><i class="fas fa-sign-in-alt"></i> ログイン</a></div>{% endif %}
+        
+        {% if task.description %}
+        <div class="task-description">
+            <h3 class="description-title">説明</h3>
+            <div class="description-content">{{ task.description }}</div>
         </div>
-        <div class="overlay" id="overlay" style="display: none;"></div>
+        {% endif %}
+        
+        <div class="task-actions">
+            <a href="{% url 'helloworldapp:task_edit_view' task.id %}" class="btn-edit">
+                <i class="fas fa-edit"></i> 編集
+            </a>
+            <a href="{% url 'helloworldapp:task_delete_view' task.id %}" class="btn-delete">
+                <i class="fas fa-trash"></i> 削除
+            </a>
+        </div>
     </div>
-    <script src="{% static 'helloworldapp/js/script.js' %}"></script>
-</body>
-</html>
+</div>
+{% endblock content %}

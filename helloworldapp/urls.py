@@ -13,6 +13,7 @@ urlpatterns = [
     path('task/<int:task_id>/', views.task_detail_view, name='task_detail_view'),
     path('task/<int:task_id>/edit/', views.task_edit_view, name='task_edit_view'),
     path('task/<int:task_id>/delete/', views.task_delete_view, name='task_delete_view'),
+    path('task/<int:task_id>/update-status/', views.update_task_status, name='update_task_status'),
     
     path('password_change/', 
          auth_views.PasswordChangeView.as_view(
@@ -26,6 +27,11 @@ urlpatterns = [
          ), 
          name='password_change_done'),
 
+    path('projects/', views.project_list_view, name='project_list_view'),
+    path('projects/create/', views.project_create_view, name='project_create_view'),
+    path('projects/<int:project_id>/', views.project_detail_view, name='project_detail_view'),
+    path('projects/<int:project_id>/edit/', views.project_edit_view, name='project_edit_view'),
+    path('projects/<int:project_id>/delete/', views.project_delete_view, name='project_delete_view'),
     path('project/<int:project_id>/board/', views.project_board_view, name='project_board_view'),
     path('my_page/', views.my_page_view, name='my_page_view'),
     path('calendar/', views.calendar_view, name='calendar_view'),
@@ -39,4 +45,5 @@ urlpatterns = [
     path('teams/<int:team_id>/dashboard/', views.team_dashboard_view, name='team_dashboard_view'),
     path('help/', views.help_view, name='help_view'),
     path('settings/', views.app_settings_view, name='app_settings_view'), # ★★★ アプリ設定ビューへのパスを追加 ★★★
+    path('report/', views.report_view, name='report_view'),
 ]

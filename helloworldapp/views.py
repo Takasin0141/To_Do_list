@@ -1,5 +1,5 @@
 from django.shortcuts import render, redirect, get_object_or_404
-from django.http import HttpResponse, HttpResponseForbidden
+from django.http import HttpResponse, HttpResponseForbidden, JsonResponse
 from .models import Task, Project, Team 
 from django.contrib.auth.models import User
 from django.utils import timezone
@@ -10,6 +10,7 @@ from django.contrib.auth.forms import AuthenticationForm, UserCreationForm
 from django.contrib.auth.decorators import login_required
 from django.contrib import messages
 from django.urls import reverse
+from django.db.models import Count, Q
 
 # (main_page や認証関連、タスクCRUD、チーム関連、その他既存のビューなどは変更なし)
 # ... (既存のビュー関数のコード) ...
@@ -29,14 +30,24 @@ def main_page(request):
     else:
         form = TaskForm()
     tasks = Task.objects.all().order_by('due_date', 'priority')
-    assigned_tasks_count = tasks.exclude(status='completed').count()
-    due_soon_tasks = tasks.filter(
-        due_date__gte=timezone.now().date(),
-        due_date__lte=timezone.now().date() + timedelta(days=7),
-        status__in=['pending', 'in_progress', 'on_hold']
-    )
-    due_soon_count = due_soon_tasks.count()
-    completed_count = tasks.filter(status='completed').count()
+    # ログインユーザーの担当タスクのみをカウント
+    if request.user.is_authenticated:
+        assigned_tasks_count = Task.objects.filter(assignee=request.user).exclude(status='completed').count()
+    else:
+        assigned_tasks_count = 0
+    # ログインユーザーの期限間近タスクのみをカウント
+    if request.user.is_authenticated:
+        due_soon_tasks = Task.objects.filter(
+            assignee=request.user,
+            due_date__gte=timezone.now().date(),
+            due_date__lte=timezone.now().date() + timedelta(days=7),
+            status__in=['pending', 'in_progress', 'on_hold']
+        )
+        due_soon_count = due_soon_tasks.count()
+        completed_count = Task.objects.filter(assignee=request.user, status='completed').count()
+    else:
+        due_soon_count = 0
+        completed_count = 0
     users = User.objects.all()
     projects_list = Project.objects.all()
     context = {
@@ -264,12 +275,35 @@ def calendar_view(request):
     context = {'events_list': events_data, 'page_title': 'カレンダービュー'}
     return render(request, 'helloworldapp/calendar.html', context)
 
-# マイタスクページ (変更なし)
+# マイタスクページ
 @login_required
 def my_tasks_view(request):
+    if request.method == 'POST':
+        # タスク追加処理
+        form = TaskForm(request.POST)
+        if form.is_valid():
+            task = form.save(commit=False)
+            task.assignee = request.user
+            task.save()
+            form.save_m2m()
+            messages.success(request, f"タスク「{task.title}」が追加されました。")
+            return redirect('helloworldapp:my_tasks_view')
+        else:
+            messages.error(request, "タスクの追加に失敗しました。入力内容を確認してください。")
+    else:
+        form = TaskForm()
+    
     user_tasks = Task.objects.filter(assignee=request.user).exclude(status='completed').order_by('due_date', 'priority')
     completed_user_tasks = Task.objects.filter(assignee=request.user, status='completed').order_by('-updated_at')
-    context = {'user_tasks': user_tasks, 'completed_user_tasks': completed_user_tasks, 'page_title': 'マイタスク'}
+    projects = Project.objects.all()
+    
+    context = {
+        'user_tasks': user_tasks, 
+        'completed_user_tasks': completed_user_tasks, 
+        'projects': projects,
+        'form': form,
+        'page_title': 'マイタスク'
+    }
     return render(request, 'helloworldapp/my_tasks.html', context)
 
 # プロジェクトボードビュー (変更なし)
@@ -309,6 +343,66 @@ def my_page_view(request):
     }
     return render(request, 'helloworldapp/my_page.html', context)
 
+# プロジェクト一覧ビュー
+@login_required
+def project_list_view(request):
+    projects = Project.objects.all().order_by('-created_at')
+    context = {'projects': projects, 'page_title': 'プロジェクト一覧'}
+    return render(request, 'helloworldapp/project_list.html', context)
+
+# プロジェクト作成ビュー
+@login_required
+def project_create_view(request):
+    if request.method == 'POST':
+        name = request.POST.get('name')
+        description = request.POST.get('description', '')
+        if name:
+            project = Project.objects.create(name=name, description=description)
+            messages.success(request, f"プロジェクト「{project.name}」が作成されました。")
+            return redirect('helloworldapp:project_list_view')
+        else:
+            messages.error(request, "プロジェクト名を入力してください。")
+    context = {'page_title': '新しいプロジェクトを作成'}
+    return render(request, 'helloworldapp/project_create.html', context)
+
+# プロジェクト詳細ビュー
+@login_required
+def project_detail_view(request, project_id):
+    project = get_object_or_404(Project, id=project_id)
+    project_tasks = Task.objects.filter(project=project).order_by('-created_at')
+    context = {'project': project, 'project_tasks': project_tasks, 'page_title': f"プロジェクト詳細: {project.name}"}
+    return render(request, 'helloworldapp/project_detail.html', context)
+
+# プロジェクト編集ビュー
+@login_required
+def project_edit_view(request, project_id):
+    project = get_object_or_404(Project, id=project_id)
+    if request.method == 'POST':
+        name = request.POST.get('name')
+        description = request.POST.get('description', '')
+        if name:
+            project.name = name
+            project.description = description
+            project.save()
+            messages.success(request, f"プロジェクト「{project.name}」が更新されました。")
+            return redirect('helloworldapp:project_detail_view', project_id=project.id)
+        else:
+            messages.error(request, "プロジェクト名を入力してください。")
+    context = {'project': project, 'page_title': f"プロジェクト編集: {project.name}"}
+    return render(request, 'helloworldapp/project_edit.html', context)
+
+# プロジェクト削除ビュー
+@login_required
+def project_delete_view(request, project_id):
+    project = get_object_or_404(Project, id=project_id)
+    if request.method == 'POST':
+        project_name = project.name
+        project.delete()
+        messages.success(request, f"プロジェクト「{project_name}」を削除しました。")
+        return redirect('helloworldapp:project_list_view')
+    context = {'project': project, 'page_title': f"プロジェクト削除確認: {project.name}"}
+    return render(request, 'helloworldapp/project_confirm_delete.html', context)
+
 # 11. アプリ設定ページ
 @login_required # ★★★ ログイン必須とする ★★★
 def app_settings_view(request): # ★★★ プレースホルダーから修正 ★★★
@@ -316,6 +410,81 @@ def app_settings_view(request): # ★★★ プレースホルダーから修正
         'page_title': 'アプリ設定'
     }
     return render(request, 'helloworldapp/app_settings.html', context) # 新しいテンプレートを指定
+
+# レポートビュー
+@login_required
+def report_view(request):
+    # タスク統計
+    total_tasks = Task.objects.count()
+    completed_tasks = Task.objects.filter(status='completed').count()
+    pending_tasks = Task.objects.filter(status='pending').count()
+    in_progress_tasks = Task.objects.filter(status='in_progress').count()
+    
+    # プロジェクト統計
+    total_projects = Project.objects.count()
+    
+    # チーム統計
+    total_teams = Team.objects.count()
+    
+    # ユーザー統計
+    total_users = User.objects.count()
+    
+    # 最近の活動（過去30日）
+    thirty_days_ago = timezone.now() - timedelta(days=30)
+    recent_tasks = Task.objects.filter(created_at__gte=thirty_days_ago).count()
+    recent_projects = Project.objects.filter(created_at__gte=thirty_days_ago).count()
+    
+    # 完了率
+    completion_rate = (completed_tasks / total_tasks * 100) if total_tasks > 0 else 0
+    
+    # 期限間近のタスク
+    due_soon_tasks = Task.objects.filter(
+        due_date__gte=timezone.now().date(),
+        due_date__lte=timezone.now().date() + timedelta(days=7),
+        status__in=['pending', 'in_progress']
+    ).count()
+    
+    context = {
+        'page_title': 'レポート',
+        'total_tasks': total_tasks,
+        'completed_tasks': completed_tasks,
+        'pending_tasks': pending_tasks,
+        'in_progress_tasks': in_progress_tasks,
+        'total_projects': total_projects,
+        'total_teams': total_teams,
+        'total_users': total_users,
+        'recent_tasks': recent_tasks,
+        'recent_projects': recent_projects,
+        'completion_rate': round(completion_rate, 1),
+        'due_soon_tasks': due_soon_tasks,
+    }
+    return render(request, 'helloworldapp/report.html', context)
+
+# タスクステータス更新API
+@login_required
+def update_task_status(request, task_id):
+    if request.method == 'POST':
+        try:
+            import json
+            data = json.loads(request.body)
+            new_status = data.get('status')
+            
+            task = get_object_or_404(Task, id=task_id)
+            
+            # 権限チェック（タスクの担当者またはスーパーユーザーのみ）
+            if not (request.user == task.assignee or request.user.is_superuser):
+                return JsonResponse({'success': False, 'error': '権限がありません'}, status=403)
+            
+            # ステータスを更新
+            task.status = new_status
+            task.save()
+            
+            return JsonResponse({'success': True, 'message': 'ステータスが更新されました'})
+            
+        except Exception as e:
+            return JsonResponse({'success': False, 'error': str(e)}, status=500)
+    
+    return JsonResponse({'success': False, 'error': '無効なリクエストです'}, status=400)
 
 # 13. ヘルプ画面
 def help_view(request):
